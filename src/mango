@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+
+"""
+mango
+> a simple script manager
+
+This is the main instance of the mango script, and will automatically be placed in a path-included folder by the Mango Bootstrap.
+
+A typical mango repo is formulated as follows:
+- folder (called a mango repo)
+    - .mango (call the mango folder)
+        - .instructions (lists all instructions within this repo)
+        - .hosts (lists all hosts of this repo)
+        - all scripts of this repo
+"""
+
+import argparse
+import os, sys
+
+def existMangoRepo(scan_path_str: str) -> bool:
+    """check whether a directory is a mango repo
+
+    Keyword arguments:
+    - scan_path_str -- the string of the directory to check
+    
+    Return: bool for whether the directory is a mango repo
+    """
+    
+    return os.path.exists(os.path.join(scan_path_str, ".mango"))
+
+def closestMangoRepo() -> str:
+    """find the first mango repo up the directory tree, raises a FileNotFoundError if none is found
+
+    Return: string for the path of the closest mango repo
+    """
+    
+    cur_exec_path_str = os.getcwd()
+    while cur_exec_path_str != "/":
+        if existMangoRepo(cur_exec_path_str):
+            return cur_exec_path_str
+        cur_exec_path_str = os.path.dirname(cur_exec_path_str)
+    raise FileNotFoundError("mango repo not found")
+
+def mangoFind(repo_path_str: str, command_name: str) -> str | None:
+    """find the script that corresponds to a command in a mango repo
+    
+    Keyword arguments:
+    - repo_path_str -- the string the mango repo
+    - command_name -- the command typed in by the user
+    
+    Return: the path to the script if it exists, None if not
+    """
+    
+    try:
+        with open(os.path.join(repo_path_str, ".mango", ".instructions"), "r") as instructions_file:
+            for line in instructions_file:
+                line = line.strip()
+                # print(line)
+                if (len(line) == 0 or line.startswith("#")):
+                    continue
+                script, commands = line.split(":")
+                commands = commands.split()
+                if command_name in commands:
+                    return os.path.join(repo_path_str, ".mango", script)
+        return None
+    except:
+        # raise SyntaxError("invalid .instructions file")
+        raise
+
+def mangoRecursiveFind(repo_path_str: str, command_name: str) -> str | None:
+    """find the script that corresponds to a command in a mango repo, recursively, by going up the directory tree
+    
+    Keyword arguments:
+    - repo_path_str -- the string the mango repo
+    - command_name -- the command typed in by the user, with the host flag `@` removed
+    
+    Return: the string of the script if it exists, None if not
+    """
+    while repo_path_str != "/":
+        if not existMangoRepo(repo_path_str):
+            continue
+        script = mangoFind(repo_path_str, command_name)
+        if script is not None:
+            return os.path.join(repo_path_str, ".mango", script)
+        repo_path_str = os.path.dirname(repo_path_str)
+    return None
+
+def mangoExecute(script_path_str: str, args: list[str]) -> None:
+    """execute a script with arguments
+    
+    Keyword arguments:
+    - script_path_str -- the string of the script to execute
+    - args -- the list of arguments to pass to the script
+    """
+    
+    os.system(f"{script_path_str} " + " ".join(args))
+
+def mango():
+    """the main function for the mango script
+    """
+    
+    parser = argparse.ArgumentParser(description="Mango: a simple script manager")
+    parser.add_argument("command", help="The command to run. Host commands start with @")
+    parser.add_argument("args", nargs=argparse.REMAINDER, help="Arguments to pass to the command", default=[])
+    args = parser.parse_args()
+    script = None
+    
+    try:
+        if (args.command.startswith("@")):
+            # this is a host command
+            command = args.command[1:]
+            script = mangoRecursiveFind(closestMangoRepo(), command)
+            if script is None:
+                print(f"Command '{command}' not found in any repo. Should it exist?", file=sys.stderr)
+                return
+        else:
+            # this is a normal command
+            script = mangoFind(closestMangoRepo(), args.command)
+            if script is None:
+                print(f"Command '{args.command}' not found in the current repo. Should it exist?", file=sys.stderr)
+                return
+        # execute the script
+        mangoExecute(script, args.args)
+    except FileNotFoundError:
+        print("No mango repo found in any directory. Where's your home mango I wonder :P", file=sys.stderr)
+    except SyntaxError:
+        print("Invalid .instructions file. Does it exist? Or is there something wrong with it :<", file=sys.stderr)
+    except:
+        print("An unknown error occurred. I'm sorry, I'm not sure what happened :(", file=sys.stderr)
+        raise
+
+if __name__ == '__main__':
+    mango()
