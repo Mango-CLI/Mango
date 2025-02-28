@@ -1,0 +1,8 @@
+All hooks in Mango are CONVENTIONAL, which means that they are NOT part of any syntax, and are not special in any way.
+
+These hooks work solely because the default home mango repo calls them whenever a host command is invoked there.
+
+Feel free to modify, replace or add any hook if you feel that it is convenient.
+
+default hooks:
+  .on-add   Called after @add is triggered. Takes two positional arguments: the new file name, and the full path to the repo.
