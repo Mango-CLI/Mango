@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# The default script template for the init command.
+
+# Write an introductory message to .instructions.
+echo "# The .instructions list all scripts in a mango repo and their corresponding commands." > .instructions
+echo "# Each line not starting with # is a script-commands pair." >> .instructions
+

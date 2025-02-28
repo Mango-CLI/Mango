@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# So it's empty, as its name suggests.
+# Everything that is required for a working .mango has been handled by the init script.

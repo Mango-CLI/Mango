@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+"""
+init
+
+usage: mango @init [repo_path] (-t, --template [template_name])
+
+This is a prebuilt script and is automatically placed in /home/<usr>/.mango, aka the home mango repo.
+It is called to make the current directory a mango repo.
+
+When the current directory is already a mango repo, this script will raise a FileExistsError.
+"""
+
+from common import *
+
+import argparse
+import sys, os
+
+def existTemplate(home_mango_path: str, template_name: str) -> bool:
+    """check whether a template exists
+
+    Keyword arguments:
+    - template_name -- the name of the template to check
+
+    Return: bool for whether the template exists
+    """
+
+    return os.path.exists(os.path.join(home_mango_path, 'templates', template_name))
+
+def init():
+    """the main function for the init script
+    """
+    
+    # Parse the arguments
+    parser = argparse.ArgumentParser(description="initialize a mango repo")
+    parser.add_argument("repo_path", type=str, help="the path to the mango repo", default='.', nargs='?')
+    parser.add_argument("-t", "--template", type=str, help="the template to use for the mango repo", default="default")
+    args = parser.parse_args()
+    
+    # Get the directory to initialize
+    dir_to_init = os.path.abspath(args.repo_path)
+    if existMangoRepo(dir_to_init):
+        print(f"Oops! The directory {dir_to_init} is already a mango repo. If you want to reinitialize it, consider using @del to de-mango it first.")
+        return
+    
+    # Get the template to use
+    script_file_path = os.path.abspath(__file__)
+    script_folder_path = os.path.dirname(script_file_path)
+    if not existTemplate(script_folder_path, args.template):
+        print(f"Sorry! I don't know any template named '{args.template}' :(")
+        return
+    
+    print(f"Initializing a mango repo at {dir_to_init} with template '{args.template}'")
+    # Create the .mango folder
+    os.makedirs(os.path.join(dir_to_init, '.mango'), exist_ok=True)
+    os.chdir(os.path.join(dir_to_init, '.mango'))
+    # Create the default .instructions file
+    with open('.instructions', 'w') as instructions_file:
+        pass
+    
+    # Finally, run the template script
+    os.system(os.path.join(script_folder_path, 'templates', args.template))
+
+
+if __name__ == "__main__":
+    init()
