@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+
+"""
+del
+
+usage: mango @del [repo_path]
+
+This is a prebuilt script and is automatically placed in /home/<usr>/.mango, aka the home mango repo.
+It is called to make the current directory a mango repo.
+
+When no repo is found at the given path, this script will raise a FileNotFoundError.
+"""
+
+from common import *
+
+import argparse
+import sys, os
+
+def delRepo(repo_path: str):
+    """delete a mango repo
+
+    Keyword arguments:
+    - repo_path -- the path to the mango repo to delete
+    """
+    
+    # Get the directory to delete
+    dir_to_del = os.path.abspath(repo_path)
+    if not existMangoRepo(dir_to_del):
+        raise FileNotFoundError("repo not found")
+    
+    print(f"Deleting the mango repo")
+    # Delete the .mango folder
+    removeFolderRecursively(os.path.join(dir_to_del, '.mango'))
+
+def del_():
+    """the main function for the del script
+    """
+    
+    # Parse the arguments
+    parser = argparse.ArgumentParser(description="delete a mango repo")
+    parser.add_argument("repo_path", type=str, help="the path to the mango repo", default='.', nargs='?')
+    args = parser.parse_args()
+    
+    if not existMangoRepo(args.repo_path):
+        print(f"Hmm, the directory {args.repo_path} is not a mango repo.")
+        return
+    
+    # Delete the repo
+    try:
+        print(f"Are you sure to delete the mango repo at {os.path.abspath(args.repo_path)}? (y/n)", end=' ')
+        if input().lower() != 'y':
+            return
+        delRepo(args.repo_path)
+    except FileNotFoundError:
+        print(f"Oops! The directory {args.repo_path} is not a mango repo.")
+
+if __name__ == '__main__':
+    del_()
