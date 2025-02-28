@@ -6,7 +6,7 @@ del
 usage: mango @del [repo_path]
 
 This is a prebuilt script and is automatically placed in /home/<usr>/.mango, aka the home mango repo.
-It is called to make the current directory a mango repo.
+It is called to delete a mango repo.
 
 When no repo is found at the given path, this script will raise a FileNotFoundError.
 """
