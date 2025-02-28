@@ -63,8 +63,8 @@ def mangoFind(repo_path_str: str, command_name: str) -> str | None:
                     return os.path.join(repo_path_str, ".mango", script)
         return None
     except:
-        # raise SyntaxError("invalid .instructions file")
-        raise
+        raise SyntaxError("invalid .instructions file")
+        # raise
 
 def mangoRecursiveFind(repo_path_str: str, command_name: str) -> str | None:
     """find the script that corresponds to a command in a mango repo, recursively, by going up the directory tree
@@ -153,10 +153,16 @@ They can, but are not encouraged to, be overridden by user-defined scripts in a 
                 return
         # execute the script
         mangoExecute(script, args.args)
-    except FileNotFoundError:
-        print("No mango repo found in any directory. Where's your home mango I wonder :P", file=sys.stderr)
-    except SyntaxError:
-        print("Invalid .instructions file. Does it exist? Or is there something wrong with it :<", file=sys.stderr)
+    except FileNotFoundError as e:
+        if str(e) == "mango repo not found":
+            print("No mango repo found in any directory. Where's your home mango I wonder :P", file=sys.stderr)
+        else:
+            raise
+    except SyntaxError as e:
+        if str(e) == "invalid .instructions file":
+            print("Invalid .instructions file. Does it exist? Or is there something wrong with it :<", file=sys.stderr)
+        else:
+            raise
     except:
         print("An unknown error occurred. I'm sorry, I'm not sure what happened :(", file=sys.stderr)
         raise
