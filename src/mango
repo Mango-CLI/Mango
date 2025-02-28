@@ -77,6 +77,7 @@ def mangoRecursiveFind(repo_path_str: str, command_name: str) -> str | None:
     """
     while repo_path_str != "/":
         if not existMangoRepo(repo_path_str):
+            repo_path_str = os.path.dirname(repo_path_str)
             continue
         script = mangoFind(repo_path_str, command_name)
         if script is not None:
