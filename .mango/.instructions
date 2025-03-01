@@ -10,3 +10,4 @@ rm: remove rm r
 list: list l
 edit: edit e
 bind: bind b
+unbind: unbind ub

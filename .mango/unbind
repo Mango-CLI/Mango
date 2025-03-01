@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+
+"""
+unbind
+
+usage: mango @unbind [script_name] (command_name ...)
+
+This is a prebuilt script and is automatically placed in /home/<usr>/.mango, aka the home mango repo.
+It is called to unbind selected or all commands from a script.
+
+If the script does not exist, an error will be raised.
+"""
+
+from _common import *
+
+import argparse
+import sys, os
+
+def unbind():
+    parser = argparse.ArgumentParser(description="unbind selected or all commands from a script")
+    parser.add_argument("script_name", type=str)
+    parser.add_argument("command_names", type=str, nargs='*')
+    args = parser.parse_args()
+    
+    # get the current repo
+    try:
+        current_repo = closestMangoRepo()
+    except FileNotFoundError:
+        print("No mango repo found. (This should already have been thrown though...)")
+    
+    # get the script path
+    script_path = os.path.join(current_repo, '.mango', args.script_name)
+    if not os.path.exists(script_path): # if the script does not exist, then create it
+        print(f"Sorry, script '{args.script_name}' does not exist. Maybe you can create it using @add ?", color="red", underlined=True, bold=True)
+        return
+    
+    # insert the bindings into .instructions
+    if len(args.command_names) == 0:
+        print(f"All bindings of script '{args.script_name}' will be removed.", color="yellow", bold=True)
+        print("Are you sure you want to continue? (y/n)", end=' ', color="cyan")
+        if input().lower() != 'y':
+            return
+        unbindScriptAll(repo_path=current_repo, script_name=args.script_name)
+    else:
+        print(f"Unbinding the following commands from script '{args.script_name}': {args.command_names}", color="green")
+        unbindScriptSelectively(repo_path=current_repo, script_name=args.script_name, command_names=args.command_names)
+
+
+if __name__ == '__main__':
+    unbind()
