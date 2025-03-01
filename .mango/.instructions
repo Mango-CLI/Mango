@@ -8,3 +8,4 @@ del: del d
 add: add a
 rm: remove rm r
 list: list l
+edit: edit e
