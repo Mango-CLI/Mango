@@ -63,6 +63,7 @@ def mangoFind(repo_path_str: str, command_name: str) -> str | None:
                     return os.path.join(repo_path_str, ".mango", script)
         return None
     except:
+        print("Error occurred when parsing repo: " + repo_path_str, file=sys.stderr)
         raise SyntaxError("invalid .instructions file")
         # raise
 
