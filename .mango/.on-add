@@ -1,0 +1,4 @@
+#!/bin/bash
+
+chmod $1 754
+cat .on-add.template > $1
