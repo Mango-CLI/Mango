@@ -9,13 +9,21 @@ COLORS = {
     "blue": "\033[94m",
     "magenta": "\033[95m",
     "cyan": "\033[96m",
-    "white": "\033[97m",
-    "reset": "\033[0m"
+    "white": "\033[97m"
 }
+
+# ANSI style codes
+STYLES = {
+    "bold": "\033[1m",
+    "underlined": "\033[4m",
+}
+
+# Reset flag
+RESET = "\033[0m"
 
 original_print = builtins.print
 
-def print(*args, color=None, **kwargs):
+def print(*args, color=None, bold=False, underlined=False, **kwargs):
     """
     Custom print function that supports colored output.
 
@@ -26,13 +34,19 @@ def print(*args, color=None, **kwargs):
     Args:
         color (str, optional): The color name (red, green, yellow, etc.)
     """
+    flags = ""
+    
     if color in COLORS:
-        sys.stdout.write(COLORS[color])  # Apply color
-        original_print(*args, **kwargs)
-        sys.stdout.write(COLORS["reset"])  # Reset color
-        sys.stdout.flush()
-    else:
-        original_print(*args, **kwargs)  # Default print
+        flags += COLORS[color]
+    if bold:
+        flags += STYLES["bold"]
+    if underlined:
+        flags += STYLES["underlined"]
+    
+    sys.stdout.write(flags)
+    original_print(*args, **kwargs)
+    sys.stdout.write(RESET)
+    sys.stdout.flush()
 
 # Required to override print globally
 builtins.print = print
