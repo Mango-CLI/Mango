@@ -1,4 +1,5 @@
 import sys, os, shutil
+import _print_utils
 
 def existMangoRepo(scan_path_str: str) -> bool:
     """check whether a directory is a mango repo
