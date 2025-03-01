@@ -33,7 +33,7 @@ def executeIfExists(executable_path: str, args, throw: bool = False) -> None:
     """
     
     if os.path.exists(executable_path):
-        os.system(" ".join([executable_path] + list(args)))
+        os.system(" ".join([executable_path] + [f'"{arg}"' for arg in args]))
     elif throw:
         raise FileNotFoundError(f"{executable_path} not found")
 

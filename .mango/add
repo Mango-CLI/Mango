@@ -41,7 +41,7 @@ def add():
         # and change its permissions, defaulting to 754
         os.chmod(script_path, 0o754)
         # after this, call the hook .on-add
-        executeIfExists(os.path.join(current_repo, '.mango', ".on-add"), args.script_name, args.bind)
+        executeIfExists(os.path.join(current_repo, '.mango', ".on-add"), args=[args.script_name, '' if args.bind is None else ' '.join(args.bind)])
     
     # insert the bindings into .instructions
     bindCommandsToScript(repo_path=current_repo, script_name=args.script_name, command_names=args.bind if args.bind is not None else [])
