@@ -103,31 +103,28 @@ def mango():
     parser = argparse.ArgumentParser(
         description="Mango: a simple script manager",
         epilog=
-'''Mango comes with a default set of host commands, which you can call using @. They include:
+'''If you have installed the full version, your mango should come with a default set of host commands, which you can call using @. They include:
 
   init\t create a new mango repo, defaults to in the present working directory, using a template if specified
-      \t - usage: mango @init [repo_path] (-t, --template [template_name])
-      
-  del\t delete the mango repo in a folder, defaulting to the present working directory, if it exists
-     \t - usage: mango @del [repo_path]
-  
-  list\t list all the scripts in a mango repo, defaulting to the present working directory
-      \t - usage: mango @list [repo_path]
+      \t - usage: mango @init (repo_path) (-t, --template [template_name])
 
-  add\t create a new script in the current mango repo and open it in the default editor
+  del\t delete the mango repo in a folder, defaulting to the present working directory, if it exists
+     \t - usage: mango @del (repo_path)
+
+  list\t list all the scripts in the closet mango repo, defaulting to the present working directory
+      \t - usage: mango @list (repo_path)
+
+  add\t create a new script in the current mango repo and open it in the default editor; use --noopen to avoid opening
      \t - usage: mango @add [script_name] (-b, --bind [command_name ...]) (--noopen)
 
-  rm\t remove a script and all bindings from the current mango repo, if it exists
-    \t - usage: mango @rm [script_name]
+  rm\t remove a script and bindings from the current mango repo. leave -b without further arguments to remove all bindings
+    \t - usage: mango @rm [script_name] (-b, --bind (command_name ...))
 
   bind\t bind a script to one or more commands in the current mango repo
-      \t - usage: mango @bind [script_name] [command_name ...]
+      \t - usage: mango @bind [script_name] (command_name ...)
 
   unbind \t unbind a script from one or more commands in the current mango repo
-         \t - usage: mango @unbind [script_name] [command_name ...]
-
-  template \t register the current mango repo as a new template for use in the init command
-           \t - usage: mango @template [template_name]
+         \t - usage: mango @unbind [script_name] (command_name ...)
 
 They can, but are not encouraged to, be overridden by user-defined scripts in a mango repo, or by parent repos.
 ''',
