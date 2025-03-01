@@ -12,13 +12,13 @@ def existMangoRepo(scan_path_str: str) -> bool:
     
     return os.path.exists(os.path.join(scan_path_str, ".mango"))
 
-def closestMangoRepo() -> str:
+def closestMangoRepo(starting_dir: str = os.getcwd()) -> str:
     """find the first mango repo up the directory tree, raises a FileNotFoundError if none is found
 
     Return: string for the path of the closest mango repo
     """
     
-    cur_exec_path_str = os.getcwd()
+    cur_exec_path_str = starting_dir
     while cur_exec_path_str != "/":
         if existMangoRepo(cur_exec_path_str):
             return cur_exec_path_str
