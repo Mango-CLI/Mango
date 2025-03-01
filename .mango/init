@@ -24,7 +24,9 @@ def existTemplate(home_mango_path: str, template_name: str) -> bool:
 
     Return: bool for whether the template exists
     """
-
+    
+    if template_name.endswith('.literal'):
+        return False
     return os.path.exists(os.path.join(home_mango_path, 'templates', template_name))
 
 def init():

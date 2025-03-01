@@ -6,3 +6,5 @@
 echo "# The .instructions list all scripts in a mango repo and their corresponding commands." > .instructions
 echo "# Each line not starting with # is a script-commands pair." >> .instructions
 
+# Create a .on-add hook file.
+echo "# The hook will be invoked after a new script has been created." >> .on-add

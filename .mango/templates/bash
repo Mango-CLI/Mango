@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Create .on-add hook that appends typical shebang and scripts to the new script.
+cat "$(dirname "$(realpath "$0")")/bash.on-add.literal" > .on-add
+chmod 754 .on-add
+
+# Create the .on-add.template file that serves as the template for the .on-add hook.
+cat "$(dirname "$(realpath "$0")")/bash.on-add.template.literal" > .on-add.template
