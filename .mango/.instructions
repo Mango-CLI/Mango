@@ -5,3 +5,4 @@
 
 init: init i
 del: del d
+add: add a

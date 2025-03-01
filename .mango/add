@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+"""
+add
+
+usage: mango @add [script_name] (-b, --bind [command_name ...]) (--noopen)
+
+This is a prebuilt script and is automatically placed in /home/<usr>/.mango, aka the home mango repo.
+It is called to add or edit a command within a repo.
+
+If the script already exists, it will be opened in the default editor.
+"""
+
+from common import *
+from config import default_editor
+
+import argparse
+import sys, os
+
+def add():
+    parser = argparse.ArgumentParser(description="add or edit a script in a repo")
+    parser.add_argument("script_name", type=str)
+    parser.add_argument("-b", "--bind", type=str, nargs='*')
+    parser.add_argument("--noopen", action='store_true')
+    args = parser.parse_args()
+    
+    print(args)
+    # return
+    
+    # get the current repo
+    try:
+        current_repo = closestMangoRepo()
+    except FileNotFoundError:
+        print("No mango repo found. (This should already have been thrown though...)")
+    
+    # get the script path
+    script_path = os.path.join(current_repo, '.mango', args.script_name)
+    if not os.path.exists(script_path): # if the script does not exist, then create it
+        with open(script_path, 'w') as f:
+            pass
+        # and change its permissions, defaulting to 754
+        os.chmod(script_path, 0o754)
+        # after this, call the hook .on-add
+        executeIfExists(os.path.join(current_repo, '.mango', ".on-add"), args.script_name, args.bind)
+    
+    # insert the bindings into .instructions
+    bindCommandsToScript(repo_path=current_repo, script_name=args.script_name, command_names=args.bind if args.bind is not None else [])
+
+    # open the script in the default editor
+    if not args.noopen:
+        openInEditor(default_editor, script_path)
+
+if __name__ == '__main__':
+    add()
