@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+
+"""
+bind
+
+usage: mango @bind [script_name] [command_name ...]
+
+This is a prebuilt script and is automatically placed in /home/<usr>/.mango, aka the home mango repo.
+It is called to bind one or more commands to a script.
+
+If the script does not exist, an error will be raised.
+"""
+
+from _common import *
+
+import argparse
+import sys, os
+
+def bind():
+    parser = argparse.ArgumentParser(description="bind one or more commands to a script")
+    parser.add_argument("script_name", type=str)
+    parser.add_argument("command_names", type=str, nargs='+')
+    args = parser.parse_args()
+    
+    # get the current repo
+    try:
+        current_repo = closestMangoRepo()
+    except FileNotFoundError:
+        print("No mango repo found. (This should already have been thrown though...)")
+    
+    # get the script path
+    script_path = os.path.join(current_repo, '.mango', args.script_name)
+    if not os.path.exists(script_path): # if the script does not exist, then create it
+        print(f"Sorry, script '{args.script_name}' does not exist. Maybe you can create it using @add ?", color="red", underlined=True, bold=True)
+        return
+    
+    # insert the bindings into .instructions
+    bindCommandsToScript(repo_path=current_repo, script_name=args.script_name, command_names=args.command_names)
+    
+    print(f"Bound the given commands to script '{args.script_name}'.", color="green")
+
+
+if __name__ == '__main__':
+    bind()
