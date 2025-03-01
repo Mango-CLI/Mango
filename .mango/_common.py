@@ -151,3 +151,67 @@ def openInEditor(editor: str, file_path: str) -> None:
     """
     
     os.system(f"{editor} {file_path}")
+
+# decorator
+def enactInstructionsList(func):
+    """enact a function on a .instruction file
+    """
+    def wrapper(*args, **kwargs):
+        lines = []
+        with open(os.path.join(kwargs['repo_path'], ".mango", ".instructions"), "r") as instructions_file:
+            lines = instructions_file.readlines()
+        lines = func(*args, **kwargs, lines=lines)
+        with open(os.path.join(kwargs['repo_path'], ".mango", ".instructions"), "w") as instructions_file:
+            instructions_file.writelines(lines)
+    return wrapper
+
+@enactInstructionsList
+def dereferenceScript(repo_path: str, script_name: str, lines: list):
+    """dereference a script in the mango repo, removing it completely from the .instructions file
+
+    Keyword arguments:
+    - repo_path -- the path to the mango repo
+    - lines -- the lines of the .instructions file
+    - script_name -- the name of the script to dereference
+    """
+    
+    return [line for line in lines if not line.startswith(f"{script_name}:")]
+
+@enactInstructionsList
+def unbindScriptAll(repo_path: str, script_name: str, lines: list):
+    """unbind a script from all commands in the mango repo, but keep an empty entry in the .instructions file
+
+    Keyword arguments:
+    - repo_path -- the path to the mango repo
+    - script_name -- the name of the script to unbind
+    
+    The 'lines' parameter is handled by the enactInstructionsList decorator
+    """
+    
+    def processLine(line: str) -> str:
+        if line.startswith(f"{script_name}:"):
+            return f"{script_name}:\n"
+        return line
+    return [processLine(line) for line in lines]
+
+@enactInstructionsList
+def unbindScriptSelectively(repo_path: str, script_name: str, command_names: list, lines: list):
+    """unbind a script from a list of commands in the mango repo
+
+    Keyword arguments:
+    - repo_path -- the path to the mango repo
+    - script_name -- the name of the script to unbind
+    - command_names -- the names of the commands to unbind
+    
+    The 'lines' parameter is handled by the enactInstructionsList decorator
+    """
+    
+    def processLine(line: str) -> str:
+        if line.startswith(f"{script_name}:"):
+            present_commands = line.split(":")[1].strip().split(" ")
+            if present_commands == [""]:    # this edge case happens when the list is originally empty
+                present_commands = []
+            new_commands = set(present_commands) - set(command_names)
+            return f"{script_name}: {' '.join(new_commands)}\n"
+        return line
+    return [processLine(line) for line in lines]

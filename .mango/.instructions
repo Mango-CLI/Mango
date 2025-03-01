@@ -6,3 +6,4 @@
 init: init i
 del: del d
 add: add a
+rm: remove rm r
