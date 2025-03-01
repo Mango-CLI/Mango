@@ -11,7 +11,7 @@ It is called to make the current directory a mango repo.
 When the current directory is already a mango repo, this script will raise a FileExistsError.
 """
 
-from common import *
+from _common import *
 
 import argparse
 import sys, os

@@ -11,7 +11,7 @@ It is called to delete a mango repo.
 When no repo is found at the given path, this script will raise a FileNotFoundError.
 """
 
-from common import *
+from _common import *
 
 import argparse
 import sys, os

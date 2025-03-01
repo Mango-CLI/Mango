@@ -11,8 +11,8 @@ It is called to add or edit a command within a repo.
 If the script already exists, it will be opened in the default editor.
 """
 
-from common import *
-from config import default_editor
+from _common import *
+from _config import default_editor
 
 import argparse
 import sys, os
