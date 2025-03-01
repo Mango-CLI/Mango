@@ -33,7 +33,7 @@ def add():
     # get the script path
     script_path = os.path.join(current_repo, '.mango', args.script_name)
     if not os.path.exists(script_path): # if the script does not exist, then create it
-        print(f"Creating script at {script_path}")
+        print(f"Creating script at {script_path}", color='green')
         with open(script_path, 'w') as f:
             pass
         # and change its permissions, defaulting to 754
@@ -41,7 +41,7 @@ def add():
         # after this, call the hook .on-add
         executeIfExists(os.path.join(current_repo, '.mango', ".on-add"), args=[args.script_name, '' if args.bind is None else ' '.join(args.bind)])
     
-    print("Editing the .instructions file")
+    print("Editing the .instructions file", color='magenta')
     # insert the bindings into .instructions
     bindCommandsToScript(repo_path=current_repo, script_name=args.script_name, command_names=args.bind if args.bind is not None else [])
 

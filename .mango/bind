@@ -31,7 +31,7 @@ def bind():
     # get the script path
     script_path = os.path.join(current_repo, '.mango', args.script_name)
     if not os.path.exists(script_path): # if the script does not exist, then create it
-        print(f"Sorry, script '{args.script_name}' does not exist. Maybe you can create it using @add ?", color="red", underlined=True, bold=True)
+        print(f"Sorry, script '{args.script_name}' does not exist. Maybe you can create it using @add ?", color="red", bold=True)
         return
     
     # insert the bindings into .instructions

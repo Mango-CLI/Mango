@@ -42,17 +42,17 @@ def init():
     # Get the directory to initialize
     dir_to_init = os.path.abspath(args.repo_path)
     if existMangoRepo(dir_to_init):
-        print(f"Oops! The directory {dir_to_init} is already a mango repo. If you want to reinitialize it, consider using @del to de-mango it first.")
+        print(f"Oops! The directory {dir_to_init} is already a mango repo. If you want to reinitialize it, consider using @del to de-mango it first.", color='red', bold=True, underlined=True)
         return
     
     # Get the template to use
     script_file_path = os.path.abspath(__file__)
     script_folder_path = os.path.dirname(script_file_path)
     if not existTemplate(script_folder_path, args.template):
-        print(f"Sorry! I don't know any template named '{args.template}' :(")
+        print(f"Sorry! I don't know any template named '{args.template}' :(", color='red', bold=True)
         return
     
-    print(f"Initializing a mango repo at {dir_to_init} with template '{args.template}'")
+    print(f"Initializing a mango repo at {dir_to_init} with template '{args.template}'", color='green')
     # Create the .mango folder
     os.makedirs(os.path.join(dir_to_init, '.mango'), exist_ok=True)
     os.chdir(os.path.join(dir_to_init, '.mango'))

@@ -28,7 +28,7 @@ def delRepo(repo_path: str):
     if not existMangoRepo(dir_to_del):
         raise FileNotFoundError("repo not found")
     
-    print(f"Deleting the mango repo")
+    print(f"Deleting the mango repo", color='green')
     # Delete the .mango folder
     removeFolderRecursively(os.path.join(dir_to_del, '.mango'))
 
@@ -42,17 +42,17 @@ def del_():
     args = parser.parse_args()
     
     if not existMangoRepo(args.repo_path):
-        print(f"Hmm, the directory {args.repo_path} is not a mango repo.")
+        print(f"Hmm, the directory {args.repo_path} is not a mango repo.", color='red', bold=True)
         return
     
     # Delete the repo
     try:
-        print(f"Are you sure to delete the mango repo at {os.path.abspath(args.repo_path)}? (y/n)", end=' ')
+        print(f"Are you sure to delete the mango repo at {os.path.abspath(args.repo_path)}? (y/n)", end=' ', color='yellow', bold=True)
         if input().lower() != 'y':
             return
         delRepo(args.repo_path)
     except FileNotFoundError:
-        print(f"Oops! The directory {args.repo_path} is not a mango repo.")
+        print(f"Oops! The directory {args.repo_path} is not a mango repo.", color='red', bold=True)
 
 if __name__ == '__main__':
     del_()

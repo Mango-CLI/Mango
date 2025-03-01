@@ -25,7 +25,7 @@ def edit():
     script_path = os.path.join(repo_path, '.mango', script_name)
 
     if not os.path.exists(script_path):
-        print(f"Error: '{script_name}' does not exist in repo {repo_path}! Maybe call @add to create it?", color="red", underlined=True)
+        print(f"Error: '{script_name}' does not exist in repo {repo_path}! Maybe call @add to create it?", color="red")
         return
     
     openInEditor(default_editor, script_path)
