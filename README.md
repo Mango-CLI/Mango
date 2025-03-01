@@ -17,7 +17,7 @@ Mango utilizes the file system to provide fast and intuitive access to well-orga
 **This project requires Python**, and is tested on Python 3.12, though it should work on Python 3.6 and above. Make sure you have a compatible version of Python installed on your system. If not, you can run:
 
 ```bash
-sudo apt install python
+sudo apt install python3.12
 ```
 
 ### Installing Mango
