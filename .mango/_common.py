@@ -84,6 +84,9 @@ def existRegisteredCommand(repo_path: str, command_name: str) -> bool:
     
     with open(os.path.join(repo_path, ".mango", ".instructions"), "r") as instructions_file:
         for line in instructions_file:
+            line = line.strip()
+            if line.startswith('#'):
+                continue
             if command_name in line.split(" "):
                 return True
     return False

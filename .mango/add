@@ -42,8 +42,20 @@ def add():
         executeIfExists(os.path.join(current_repo, '.mango', ".on-add"), args=[args.script_name, '' if args.bind is None else ' '.join(args.bind)])
     
     print("Editing the .instructions file", color='magenta')
+    if args.bind is None and not existRegisteredCommand(current_repo, args.script_name):
+        print(f"No bindings specified. '{args.script_name.replace(' ', '_')}' will be configured as the default command.", color='yellow', underlined=True)
+        to_bind = [args.script_name.replace(' ', '_')]
+    else:
+        to_bind = args.bind
+    
+    # if any of the bindings have been registered in this repo, raise an error
+    for command in to_bind:
+        if existRegisteredCommand(current_repo, command):
+            print(f"Command '{command}' is already registered in this repo. Please unbind it first.", color='red', bold=True)
+            return
+    
     # insert the bindings into .instructions
-    bindCommandsToScript(repo_path=current_repo, script_name=args.script_name, command_names=args.bind if args.bind is not None else [])
+    bindCommandsToScript(repo_path=current_repo, script_name=args.script_name, command_names=to_bind)
 
     # open the script in the default editor
     if not args.noopen:
