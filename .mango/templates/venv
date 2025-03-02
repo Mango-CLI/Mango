@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+
+import os, sys
+import subprocess
+import re
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+from _print_utils import *
+from _con_utils import *
+
+# This template is called to guide the user in setting up a python virtual environment for a mango project.
+# It is written in python (system python) because it contains complex logic, and is more readable in this form.
+
+def listPythonVersions():
+    """list all python versions available on the system"""
+    search_dirs = ["/usr/bin", "/usr/local/bin", "/opt", os.path.expanduser("~/.local/bin")]
+    version_dict = {}
+    for directory in search_dirs:
+        try:
+            files = os.listdir(directory)
+            for file in files:
+                if re.match(r'^python[0-9.]*$', file):
+                    try:
+                        # print(f"Checking {file}", color='yellow')
+                        version = subprocess.check_output([os.path.join(directory, file), "--version"], stderr=subprocess.STDOUT).decode().strip()
+                        # print(f"Found {version}", color='green')
+                        if version not in version_dict:
+                            version_dict[version] = os.path.join(directory, file)
+                    except:
+                        pass
+        except FileNotFoundError:
+            pass
+    return version_dict
+
+def queryCreateOrUseVenv():
+    """ask the user whether to create a new virtual environment or use an existing one"""
+    makeQuery("Do you want to create a new virtual environment or use an existing one?", color='green')
+    
+    options = ["Create new virtual environment", "Use existing virtual environment"]
+    venv_mode = launchSelectMenu(options)
+    return ["create", "existing"][venv_mode]
+
+def queryVenvPath():
+    """ask the user for the path to the virtual environment"""
+    makeQuery("Enter path to create virtual environment, ending at the parent folder", color='green')
+    while True:
+        venv_path = getInput(f"defaults to {os.getcwd()}")
+        if venv_path.strip() == '':
+            venv_path = os.getcwd()
+        venv_path = os.path.expanduser(venv_path)
+        if not os.path.exists(venv_path):
+            print(f"! Existing path only please", color='red', bold=True)
+        else:
+            venv_path = os.path.abspath(venv_path)
+            break
+    return venv_path
+
+def queryVenvName():
+    """ask the user for the name of the virtual environment"""
+    while True:
+        venv_name = getInput("Enter the name of the virtual environment")
+        if not venv_name:
+            print(f"! Name cannot be empty", color='red', bold=True)
+        elif not re.match(r'^[a-zA-Z0-9_-]+$', venv_name):
+            print(f"! Invalid name, only alphanumeric characters, hyphens and underscores allowed", color='red', bold=True)
+        else:
+            break
+    return venv_name
+
+def queryVenvPythonVersion():
+    """ask the user for the python version to use in the virtual environment"""
+    while True:
+        python_versions = listPythonVersions()
+        makeQuery("Select the python version to use for the virtual environment", color='green')
+        options = [
+            f"{version}   \t({path})" for version, path in python_versions.items()
+        ]
+        options.append("Custom Path")
+        python_version = launchSelectMenu(options)
+        if python_version == len(options) - 1:
+            while True:
+                python_path = getInput("Enter the path to the python executable")
+                if not python_path:
+                    print(f"! Path cannot be empty", color='red', bold=True)
+                elif not (os.path.exists(python_path) and os.path.isfile(python_path) and re.match(r'^python[0-9.]*$', os.path.basename(python_path))):
+                    print(f"! Path is not valid", color='red', bold=True)
+                else:
+                    pass
+            break
+        else:
+            python_path = list(python_versions.values())[python_version]
+            break
+    return python_path
+
+def queryExistingVenvPath():
+    """ask the user for the path to the existing virtual environment"""
+    while True:
+        venv_path = getInput("Enter path to an existing virtual environment, ending at the venv folder")
+        if venv_path.strip() == '':
+            print(f"! Path cannot be empty", color='red', bold=True)
+        venv_path = os.path.expanduser(venv_path)
+        if not os.path.exists(venv_path):
+            print(f"! This path does not exist", color='red', bold=True)
+        elif not os.path.isfile(os.path.join(venv_path, "bin", "python3")):
+            print(f"! This path does not contain a valid virtual environment", color='red', bold=True)
+        else:
+            venv_path = os.path.abspath(venv_path)
+            break
+    return venv_path
+
+def runCreateVenvGuide():
+    venv_path = queryVenvPath()
+    venv_name = queryVenvName()
+    python_path = queryVenvPythonVersion()
+    venv_full_path = os.path.join(venv_path, venv_name)
+    print(f"Creating virtual environment at {venv_full_path}...", color='yellow', underlined=True)
+    try:
+        print(f"Running command: {python_path} -m venv {venv_full_path}", color='yellow')
+        subprocess.run([python_path, "-m", "venv", venv_full_path], check=True)
+        print(f"Virtual environment created successfully", color='green', bold=True, underlined=True)
+    except subprocess.CalledProcessError:
+        print(f"! Failed to create virtual environment", color='red', bold=True)
+        raise
+    return venv_full_path
+
+def runUseExistingVenvGuide():
+    full_venv_path = queryExistingVenvPath()
+    print(f"Using existing virtual environment at {full_venv_path}", color='yellow', underlined=True)
+    return full_venv_path
+
+def createOnAddFiles(venv_full_path):
+    """create a .mango/venv file in the project directory"""
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'venv.on-add.literal.literal'), "r") as f:
+        on_add_literal = f.read()
+    with open(os.path.join(os.getcwd(), ".on-add.literal"), "w") as f:
+        f.write(on_add_literal.format(venv_full_path=venv_full_path))
+    print("Created .on-add.literal file", color='green', bold=True)
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'venv.on-add.literal'), "r") as f:
+        on_add = f.read()
+    with open(os.path.join(os.getcwd(), ".on-add"), "w") as f:
+        f.write(on_add)
+    # Make the file executable
+    os.chmod(os.path.join(os.getcwd(), ".on-add"), 0o755)
+    print("Created .on-add file", color='green', bold=True)
+
+def runVenvGuide():
+    """the main entrypoint for the template script"""
+    print("+-------------------------------------------------------+", color='yellow', bold=True)
+    print("|  Setting up virtual environment for mango project...  |", color='yellow', bold=True)
+    print("+-------------------------------------------------------+", color='yellow', bold=True)
+    
+    venv_mode = queryCreateOrUseVenv()
+    if venv_mode == "create":
+        venv_full_path = runCreateVenvGuide()
+    elif venv_mode == "existing":
+        venv_full_path = runUseExistingVenvGuide()
+    
+    print(f"Virtual environment setup complete", color='green', bold=True)
+    print("+-------------------------------------------------+", color='yellow', bold=True)
+    print("|  Setting up venv handlers for mango project...  |", color='yellow', bold=True)
+    print("+-------------------------------------------------+", color='yellow', bold=True)
+    createOnAddFiles(venv_full_path)
+    
+    print("+------------------------------------------------+", color='yellow', bold=True)
+    print("|  Virtual environment setup complete for mango  |", color='yellow', bold=True)
+    print("+------------------------------------------------+", color='yellow', bold=True)
+
+if __name__ == '__main__':
+    runVenvGuide()
