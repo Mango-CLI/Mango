@@ -36,7 +36,7 @@ def rm():
     if args.bind is None:
         # The original script would be removed
         print(f"Everything regarding script '{args.script_name}' will be removed!", color='yellow', bold=True)
-        print("Are you sure to proceed? (y/n)", end=' ', color='cyan')
+        print("Are you sure to proceed? (y/N)", end=' ', color='cyan')
         if input().lower() != 'y':
             return
         os.remove(script_path)
@@ -46,7 +46,7 @@ def rm():
         # The bindings (or some of the bindings) will be removed
         if args.bind == []:
             print(f"By appending -b, all bindings regarding script '{args.script_name}' will be removed.", color='yellow', bold=True)
-            print("Are you sure to proceed? (y/n)", end=' ', color='cyan')
+            print("Are you sure to proceed? (y/N)", end=' ', color='cyan')
             if input().lower() != 'y':
                 return
             unbindScriptAll(repo_path=current_repo, script_name=args.script_name)

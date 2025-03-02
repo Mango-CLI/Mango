@@ -37,7 +37,7 @@ def unbind():
     # insert the bindings into .instructions
     if len(args.command_names) == 0:
         print(f"All bindings of script '{args.script_name}' will be removed.", color="yellow", bold=True)
-        print("Are you sure you want to continue? (y/n)", end=' ', color="cyan")
+        print("Are you sure you want to continue? (y/N)", end=' ', color="cyan")
         if input().lower() != 'y':
             return
         unbindScriptAll(repo_path=current_repo, script_name=args.script_name)

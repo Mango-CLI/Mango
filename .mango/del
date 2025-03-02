@@ -47,7 +47,7 @@ def del_():
     
     # Delete the repo
     try:
-        print(f"Are you sure to delete the mango repo at {os.path.abspath(args.repo_path)}? (y/n)", end=' ', color='yellow', bold=True)
+        print(f"Are you sure to delete the mango repo at {os.path.abspath(args.repo_path)}? (y/N)", end=' ', color='yellow', bold=True)
         if input().lower() != 'y':
             return
         delRepo(args.repo_path)
