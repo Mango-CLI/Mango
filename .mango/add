@@ -49,10 +49,11 @@ def add():
         to_bind = args.bind
     
     # if any of the bindings have been registered in this repo, raise an error
-    for command in to_bind:
-        if existRegisteredCommand(current_repo, command):
-            print(f"Command '{command}' is already registered in this repo. Please unbind it first.", color='red', bold=True)
-            return
+    if to_bind is not None:
+        for command in to_bind:
+            if existRegisteredCommand(current_repo, command):
+                print(f"Command '{command}' is already registered in this repo. Please unbind it first.", color='red', bold=True)
+                return
     
     # insert the bindings into .instructions
     bindCommandsToScript(repo_path=current_repo, script_name=args.script_name, command_names=to_bind)
