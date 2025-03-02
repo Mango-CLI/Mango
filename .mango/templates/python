@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Create a shared library for the python scripts.
+cat "$(dirname "$(realpath "$0")")/python._common.py.literal" > _common.py
+
+# Create .on-add hook that appends typical shebang and scripts to the new script.
+cat "$(dirname "$(realpath "$0")")/python.on-add.literal" > .on-add
+chmod +x .on-add
+
+# Create the .on-add.literal file that serves as the literal file for the .on-add hook.
+cat "$(dirname "$(realpath "$0")")/python.on-add.literal.literal" > .on-add.literal

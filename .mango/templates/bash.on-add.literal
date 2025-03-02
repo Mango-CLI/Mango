@@ -3,4 +3,4 @@
 cd "$(dirname "$(realpath "$0")")" || exit 1
 
 chmod 754 $1
-cat .on-add.template > $1
+cat .on-add.literal > $1
