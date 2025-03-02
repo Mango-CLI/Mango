@@ -8,3 +8,4 @@ echo "# Each line not starting with # is a script-commands pair." >> .instructio
 
 # Create a .on-add hook file.
 echo "# The hook will be invoked after a new script has been created." >> .on-add
+chmod +x .on-add
