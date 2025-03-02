@@ -27,7 +27,7 @@ Mango comes with a default set of host commands, which you can call using @. The
          - usage: mango @rm [script_name]
 
   bind   bind a script to one or more commands in the current mango repo
-         - usage: mango @bind [script_name] [command_name ...]
+         - usage: mango @bind [script_name] [command_name ...] (-f, --force)
 
   unbind         unbind a script from one or more commands in the current mango repo
                  - usage: mango @unbind [script_name] [command_name ...]

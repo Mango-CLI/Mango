@@ -121,7 +121,7 @@ def mango():
     \t - usage: mango @rm [script_name] (-b, --bind (command_name ...))
 
   bind\t bind a script to one or more commands in the current mango repo
-      \t - usage: mango @bind [script_name] (command_name ...)
+      \t - usage: mango @bind [script_name] (command_name ...) (-f, --force)
 
   unbind \t unbind a script from one or more commands in the current mango repo
          \t - usage: mango @unbind [script_name] (command_name ...)
