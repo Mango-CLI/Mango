@@ -131,11 +131,13 @@ def runUseExistingVenvGuide():
 
 def createOnAddFiles(venv_full_path):
     """create a .mango/venv file in the project directory"""
+    # Create the .on-add.literal file
     with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'venv.on-add.literal.literal'), "r") as f:
         on_add_literal = f.read()
     with open(os.path.join(os.getcwd(), ".on-add.literal"), "w") as f:
         f.write(on_add_literal.format(venv_full_path=venv_full_path))
     print("Created .on-add.literal file", color='green', bold=True)
+    # Create the .on-add file
     with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'venv.on-add.literal'), "r") as f:
         on_add = f.read()
     with open(os.path.join(os.getcwd(), ".on-add"), "w") as f:
@@ -143,6 +145,18 @@ def createOnAddFiles(venv_full_path):
     # Make the file executable
     os.chmod(os.path.join(os.getcwd(), ".on-add"), 0o755)
     print("Created .on-add file", color='green', bold=True)
+    # Create the pip file
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'venv.pip.literal'), "r") as f:
+        pip_literal = f.read()
+    with open(os.path.join(os.getcwd(), "pip"), "w") as f:
+        f.write(pip_literal.format(venv_full_path=venv_full_path))
+    # Make the file executable
+    os.chmod(os.path.join(os.getcwd(), "pip"), 0o755)
+    print("Created pip file", color='green', bold=True)
+    # Register the pip file to the .instructions file
+    with open(os.path.join(os.getcwd(), ".instructions"), "a") as f:
+        f.write("pip: pip\n")
+    print("Registered pip file to .instructions", color='green', bold=True)
 
 def runVenvGuide():
     """the main entrypoint for the template script"""
