@@ -19,15 +19,28 @@ else
     InstallPath=$(realpath "$InstallPath")
 fi
 
-# Permission check
-if [[ ! -w "$InstallPath" ]]; then
-    echo -e "\033[4;31mError: No write permission for '$InstallPath'. Try running with sudo.\e[0m"
+if [[ -z "$InstallPath" ]]; then
+    echo -e "\033[4;31mError: Invalid path\e[0m"
+    echo -e "\033[1;33mInstallation aborted!\e[0m"
     exit 1
 fi
 
 # Validate path
 if [[ ! -d "$InstallPath" ]]; then
-    echo -e "\033[4;31mError: The path '$InstallPath' does not exist!\e[0m"
+    # echo -e "\033[4;31mError: The path '$InstallPath' does not exist!\e[0m"
+    echo -e "\033[1;33mWarning: The path '$InstallPath' does not exist!\e[0m"
+    read -p "Do you want to create it? (y/N): " CreatePath
+    if [[ "$CreatePath" == "y" || "$CreatePath" == "Y" ]]; then
+        mkdir -p "$InstallPath"
+    else
+        echo -e "\033[1;33mInstallation aborted!\e[0m"
+        exit 1
+    fi
+fi
+
+# Permission check
+if [[ ! -w "$InstallPath" ]]; then
+    echo -e "\033[4;31mError: No write permission for '$InstallPath'. Try running with sudo.\e[0m"
     exit 1
 fi
 
