@@ -35,7 +35,7 @@ git clone https://github.com/RayZh-hs/Mango.git
 Then cd inside to run the script
 
 ```bash
-cd mango
+cd Mango
 ./install.sh
 ```
 
