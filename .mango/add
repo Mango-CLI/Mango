@@ -21,6 +21,7 @@ def add():
     parser = argparse.ArgumentParser(description="add or edit a script in a repo")
     parser.add_argument("script_name", type=str)
     parser.add_argument("-b", "--bind", type=str, nargs='*')
+    parser.add_argument("-s", "--source", action='store_true')
     parser.add_argument("--noopen", action='store_true')
     args = parser.parse_args()
     
@@ -54,9 +55,10 @@ def add():
             if existRegisteredCommand(current_repo, command):
                 print(f"Command '{command}' is already registered in this repo. Please unbind it first.", color='red', bold=True)
                 return
+        # insert the bindings into .instructions
+        bindCommandsToScript(repo_path=current_repo, script_name=args.script_name, command_names=to_bind)
     
-    # insert the bindings into .instructions
-    bindCommandsToScript(repo_path=current_repo, script_name=args.script_name, command_names=to_bind)
+    setSourcePolicy(repo_path=current_repo, script_name=args.script_name, use_source=args.source)
 
     # open the script in the default editor
     if not args.noopen:

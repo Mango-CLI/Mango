@@ -83,6 +83,31 @@ You have no access to `folder_d` from `folder_c`.
 
 A command is matched to a script by the .instructions file.
 
+## The .instructions File
+
+The .instructions file in the .mango folder is the core registry of a mango repo.
+
+Each non-empty line either starts with #, making it a comment, or follows this format:
+```text
+<script>: <command1> <command2> ...
+```
+The script is the name of the executable, which must reside in the .mango folder. The commands are the words the user type after `mango` in the shell to call the script. A script can be tied to multiple commands, separated by spaces in the .instructions file.
+
+## Sourcing Scripts (experimental)
+
+You can source scripts by adding a `-s` or `--source` flag directly after `mango`, for instance:
+```bash
+mango -s foo arg1 arg2
+```
+This will force the script to be sourced, allowing it to modify the environment of the user shell. In reality, this is done by mango creating a separate bash shell that mirrors the current shell, and then transporting the user to that shell instance. You can exit the sourced shell by typing `exit`. This feature is experimental, and has a larger performance overhead, so use it sparingly.
+
+If a script is always supposed to be sourced all the time, you can append `*` to the script name in the .instructions file. This will force the script to be executed in sourced mode. For instance:
+
+```text
+# This makes foo a sourced script
+*foo: bar baz
+```
+
 ## Home Mango Scripts
 
 To make things easier, Mango comes with prebuilt scripts, which the installer will put in your home folder. You can read them in `~/.mango/`. They are here to make working with mango easier. As long as you work **under** your home directory, and they aren't overridden by other mango repos, you can use them as ordinary host commands:
@@ -106,10 +131,10 @@ mango @list (repo_path)
 This command lists all available scripts and commands that are registered in repo_path, which defaults to the current directory.
 
 ```bash
-mango @add [script_name] (-b, --bind [command_name...]) (--noopen)
+mango @add [script_name] (-b, --bind [command_name...]) (-s, --source) (--noopen)
 ```
 
-This command is called to add a new script to the closest repo, and optionally bind commands to it. By default after doing so the script will be opened in the default editor, configured in `~/.mango/_config.py`, but you can skip this by using `--noopen`.
+This command is called to add a new script to the closest repo, and optionally source it and/or bind commands to it. By default after doing so the script will be opened in the default editor, configured in `~/.mango/_config.py`, but you can skip this by using `--noopen`.
 
 ```bash
 mango @edit [script_name]
@@ -118,10 +143,10 @@ mango @edit [script_name]
 Edits the script in the closest repo.
 
 ```bash
-mango @rm/remove [script_name] (-b, --bind (command_name ...))
+mango @rm/remove [script_name] (-b, --bind (command_name ...)) (-s, --source)
 ```
 
-If -b/--bind is specified, this command removes bindings from a script. If nothing follows -b/--bind, all bindings are removed. If -b/--bind is not present, the script, along with all bindings, are removed.
+If -b/--bind is specified, this command removes bindings from a script. If nothing follows -b/--bind, all bindings are removed. If -s/--source is present, the script will become an ordinary, ie. not sourced. If neither is present, the script, along with all bindings, is removed.
 
 ```bash
 mango @bind [script_name] [command_name ...]

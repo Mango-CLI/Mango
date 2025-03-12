@@ -70,7 +70,7 @@ def existRegisteredScript(repo_path: str, script_name: str) -> bool:
     
     with open(os.path.join(repo_path, ".mango", ".instructions"), "r") as instructions_file:
         for line in instructions_file:
-            if line.startswith(f"{script_name}:"):
+            if line.startswith(f"{script_name}:") or line.startswith(f"*{script_name}:"):
                 return True
     return False
 
@@ -87,6 +87,9 @@ def existRegisteredCommand(repo_path: str, command_name: str) -> bool:
             line = line.strip()
             if line.startswith('#'):
                 continue
+            # fix: prone to error when there is a script whose name corresponds to a command,
+            # but the command has not been registered
+            line = line.split(":")[1].strip()
             if command_name in line.split(" "):
                 return True
     return False
@@ -131,12 +134,14 @@ def bindCommandsToScript(repo_path: str, command_names: list, script_name: str) 
     with open(os.path.join(repo_path, ".mango", ".instructions"), "r") as instructions_file:
         lines = instructions_file.readlines()
         def processLine(line: str) -> str:
-            if line.startswith(f"{script_name}:"):
+            if line.startswith(f"{script_name}:") or line.startswith(f"*{script_name}:"):
+                print(f"line: {line}")
                 nonlocal has_appended
                 has_appended= True
                 present_commands = line.split(":")[1].strip().split(" ")
                 if present_commands == [""]:    # this edge case happens when the list is originally empty
                     present_commands = []
+                print(f"present_commands: {present_commands} command_names: {command_names}")
                 new_commands = set(present_commands + command_names)
                 line = f"{script_name}: {' '.join(new_commands)}\n"
             return line
@@ -179,7 +184,7 @@ def dereferenceScript(repo_path: str, script_name: str, lines: list):
     - script_name -- the name of the script to dereference
     """
     
-    return [line for line in lines if not line.startswith(f"{script_name}:")]
+    return [line for line in lines if not (line.startswith(f"{script_name}:") or line.startswith(f"*{script_name}:"))]
 
 @enactInstructionsList
 def unbindScriptAll(repo_path: str, script_name: str, lines: list):
@@ -195,6 +200,8 @@ def unbindScriptAll(repo_path: str, script_name: str, lines: list):
     def processLine(line: str) -> str:
         if line.startswith(f"{script_name}:"):
             return f"{script_name}:\n"
+        elif line.startswith(f"*{script_name}:"):
+            return f"*{script_name}:\n"
         return line
     return [processLine(line) for line in lines]
 
@@ -217,5 +224,30 @@ def unbindScriptSelectively(repo_path: str, script_name: str, command_names: lis
                 present_commands = []
             new_commands = set(present_commands) - set(command_names)
             return f"{script_name}: {' '.join(new_commands)}\n"
+        if line.startswith(f"*{script_name}:"):
+            present_commands = line.split(":")[1].strip().split(" ")
+            if present_commands == [""]:
+                present_commands = []
+            new_commands = set(present_commands) - set(command_names)
+            return f"*{script_name}: {' '.join(new_commands)}\n"
+        return line
+    return [processLine(line) for line in lines]
+
+@enactInstructionsList
+def setSourcePolicy(repo_path: str, script_name: str, use_source: bool, lines: list):
+    """set the source policy for a single script, updating the change in the .instructions file
+
+    Keyword arguments:
+    - repo_path -- the path to the mango repo
+    - lines -- the lines of the .instructions file
+    - script_name -- the name of the script to dereference
+    - use_source -- the new source policy for the script
+    """
+    
+    def processLine(line: str) -> str:
+        if line.startswith(f"{script_name}:") and use_source:
+            return f"*{script_name}: {line.split(':')[1]}"
+        if line.startswith(f"*{script_name}:") and not use_source:
+            return f"{script_name}: {line.split(':')[1]}"
         return line
     return [processLine(line) for line in lines]

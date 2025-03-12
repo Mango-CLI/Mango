@@ -14,8 +14,9 @@ A typical mango repo is formulated as follows:
 """
 
 import argparse
-import os, sys
+import os, sys, subprocess
 
+__version__ = "1.2.1"
 epilog_message = '''\
 If you have installed the full version, your mango should come with a default set of host commands, which you can call using @. They include:
 
@@ -29,10 +30,10 @@ If you have installed the full version, your mango should come with a default se
       \t - usage: mango @list (repo_path)
 
   add\t create a new script in the current mango repo and open it in the default editor; use --noopen to avoid opening
-     \t - usage: mango @add [script_name] (-b, --bind [command_name ...]) (--noopen)
+     \t - usage: mango @add [script_name] (-b, --bind [command_name ...]) (-s, --source) (--noopen)
 
-  rm\t remove a script and bindings from the current mango repo. leave -b without further arguments to remove all bindings
-    \t - usage: mango @rm [script_name] (-b, --bind (command_name ...))
+  rm\t remove a script and bindings from the current mango repo. leave -b without further arguments to remove all bindings. add -s to deactivate source mode
+    \t - usage: mango @rm [script_name] (-b, --bind (command_name ...)) (-s, --source)
 
   bind\t bind a script to one or more commands in the current mango repo
       \t - usage: mango @bind [script_name] (command_name ...) (-f, --force)
@@ -67,7 +68,7 @@ def closestMangoRepo() -> str:
         cur_exec_path_str = os.path.dirname(cur_exec_path_str)
     raise FileNotFoundError("mango repo not found")
 
-def mangoFind(repo_path_str: str, command_name: str) -> str | None:
+def mangoFind(repo_path_str: str, command_name: str) -> tuple[str | None, bool]:
     """find the script that corresponds to a command in a mango repo
     
     Keyword arguments:
@@ -84,11 +85,15 @@ def mangoFind(repo_path_str: str, command_name: str) -> str | None:
                 # print(line)
                 if (len(line) == 0 or line.startswith("#")):
                     continue
+                use_source = False
+                if line.startswith('*'):
+                    use_source = True
+                    line = line[1:]
                 script, commands = line.split(":")
                 commands = commands.split()
                 if command_name in commands:
-                    return os.path.join(repo_path_str, ".mango", script)
-        return None
+                    return os.path.join(repo_path_str, ".mango", script), use_source
+        return None, False
     except:
         print("Error occurred when parsing repo: " + repo_path_str, file=sys.stderr)
         raise SyntaxError("invalid .instructions file")
@@ -107,21 +112,32 @@ def mangoRecursiveFind(repo_path_str: str, command_name: str) -> str | None:
         if not existMangoRepo(repo_path_str):
             repo_path_str = os.path.dirname(repo_path_str)
             continue
-        script = mangoFind(repo_path_str, command_name)
+        script, use_source = mangoFind(repo_path_str, command_name)
         if script is not None:
-            return os.path.join(repo_path_str, ".mango", script)
+            return os.path.join(repo_path_str, ".mango", script), use_source
         repo_path_str = os.path.dirname(repo_path_str)
-    return None
+    return None, False
 
-def mangoExecute(script_path_str: str, args: list[str]) -> None:
+def mangoExecute(script_path_str: str, args: list[str], use_source: bool) -> None:
     """execute a script with arguments
     
     Keyword arguments:
     - script_path_str -- the string of the script to execute
     - args -- the list of arguments to pass to the script
+    - use_source -- whether to source the script instead of executing it in a separate shell
     """
     
-    os.system(f"{script_path_str} " + " ".join(args))
+    if use_source:
+        # start a sub-shell with the exact same environment as the current shell
+        # join the script and the shell launch with && to prepare the environment
+        # this should mimic the effect of sourcing the script
+        pre_command = f"source {script_path_str} {' '.join(args)} && exec $SHELL"
+        pre_env = os.environ.copy()
+        subprocess.run(
+            pre_command, shell=True, executable="/bin/bash", env=pre_env, check=True
+        )
+    else:
+        os.system(f"{script_path_str} " + " ".join(args))
 
 def mango():
     """the main function for the mango script
@@ -132,27 +148,30 @@ def mango():
         epilog=epilog_message,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    parser.add_argument('-s', '--source', action='store_true', help="source the script instead of executing it in a separate shell")
     parser.add_argument("command", help="The command to run. Host commands start with @")
     parser.add_argument("args", nargs=argparse.REMAINDER, help="Arguments to pass to the command", default=[])
     args = parser.parse_args()
     script = None
+    use_source = args.source
     
     try:
         if (args.command.startswith("@")):
             # this is a host command
             command = args.command[1:]
-            script = mangoRecursiveFind(closestMangoRepo(), command)
+            script, enforce_source = mangoRecursiveFind(closestMangoRepo(), command)
             if script is None:
                 print(f"Command '{command}' not found in any repo. Should it exist?", file=sys.stderr)
                 return
         else:
             # this is a normal command
-            script = mangoFind(closestMangoRepo(), args.command)
+            script, enforce_source = mangoFind(closestMangoRepo(), args.command)
             if script is None:
                 print(f"Command '{args.command}' not found in the current repo. Should it exist?", file=sys.stderr)
                 return
         # execute the script
-        mangoExecute(script, args.args)
+        # if the source is used, a new bash will be spawned and will take over the current python process
+        mangoExecute(script, args.args, use_source=use_source or enforce_source)
     except FileNotFoundError as e:
         if str(e) == "mango repo not found":
             print("No mango repo found in any directory. Where's your home mango I wonder :P", file=sys.stderr)

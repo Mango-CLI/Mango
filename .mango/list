@@ -36,7 +36,10 @@ def list_(search_starting_point):
     print('Script\t Command', color="cyan", bold=True)
     for line in instructions:
         script, command = line.split(':')
-        print(script, color="green", end='\t', underlined=True)
+        if script.startswith('*'):
+            print(script, color="yellow", end='\t', underlined=True)
+        else:
+            print(script, color="green", end='\t', underlined=True)
         print(command, color="blue")
     print('')
 
