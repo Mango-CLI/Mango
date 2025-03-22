@@ -178,6 +178,25 @@ By convention, `.on-add` is executed with $1 as the name of the newly added scri
 
 Currently, only the default editor can be configured in `~/.mango/_config.py`. Simply open it up and adjust the string to whatever editor you prefer, so long as it can be launched via the terminal through `<editor_name> [file_path]`.
 
+## Troubleshooting
+
+### Why isn't PS1 updated when sourcing scripts?
+
+This issue is due to the mechanism Mango uses to source scripts. When a script is sourced, it is executed in a separate shell managed by python, and then the results are transported to an interactive new shell instance, which then takes the place of the python script. In most cases your startup script (eg. `~/.bashrc`) overwrites the PS1 setup.  declared in your script.
+
+Tracking down startup scripts is tedious, so alternatively, you can append to your .bashrc script the following:
+
+```bash
+if [ -n "$MANGO_PS1" ]; then
+    PS1=$MANGO_PS1
+fi
+unset MANGO_PS1
+```
+
+And instead of exporting PS1 in your script, export MANGO_PS1 instead.
+
+From version 1.3.1, Mango will automatically export `MANGO_SOURCED=true` when a mango script is sourced. You can use this to fine-tune your startup scripts.
+
 ## Acknowledgements
 
 The logo was made by [Freepik](https://www.freepik.com) from [Flaticon](https://www.flaticon.com). For more information, see the license in `img/license-flaticon`.

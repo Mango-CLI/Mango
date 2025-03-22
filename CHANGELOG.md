@@ -12,3 +12,10 @@
 ### Fixed
 
 - Fix bug where script names are misinterpreted as commands names.
+
+## [1.3.1]
+
+### Added
+
+- Flag MANGO_SOURCE to indicate the shell serving after sourcing a script.
+- Troubleshooting guide for PS1 issues in README.
