@@ -16,7 +16,7 @@ A typical mango repo is formulated as follows:
 import argparse
 import os, sys, subprocess
 
-__version__ = "1.3.1"
+__version__ = "1.3.2"
 epilog_message = '''\
 If you have installed the full version, your mango should come with a default set of host commands, which you can call using @. They include:
 
@@ -149,6 +149,7 @@ def mango():
         epilog=epilog_message,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    parser.add_argument('-v', '--version', action='version', version=f'Mango {__version__}')
     parser.add_argument('-s', '--source', action='store_true', help="source the script instead of executing it in a separate shell")
     parser.add_argument("command", help="The command to run. Host commands start with @")
     parser.add_argument("args", nargs=argparse.REMAINDER, help="Arguments to pass to the command", default=[])

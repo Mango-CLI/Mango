@@ -19,3 +19,9 @@
 
 - Flag MANGO_SOURCE to indicate the shell serving after sourcing a script.
 - Troubleshooting guide for PS1 issues in README.
+
+## [1.3.2]
+
+### Added
+
+- Support for versioning in the mango cli.
