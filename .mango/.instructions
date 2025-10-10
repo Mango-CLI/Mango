@@ -11,3 +11,5 @@ list: list l
 edit: edit e
 bind: bind b
 unbind: unbind ub
+install: install
+

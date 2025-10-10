@@ -1,0 +1,303 @@
+#!/usr/bin/env python3
+
+"""
+install
+usage: mango @install (repo_path) [--global] [--update]|[--uninstall]
+mango extension by @Wutong
+
+install mango scripts from remote repo to the current mango repo(or global if --global is specified)
+the remote repo should be a valid mango repo, all scripts/binding in it will be mirrored
+
+this is done by modifying the .instructions file , use install_cache/<repo_name>/<script_name> as script name
+the mirrored section will be wrapped with #<repo_name> start and #<repo_name> end
+the repo will be cloned to .mango/install_cache/<repo_name> if not already there
+for update, it will pull the latest changes from the remote repo and redo the mirroring
+for uninstall, remove the mirror section and delete the cloned repo
+"""
+
+from _common import closestMangoRepo, removeFolderRecursively
+
+import argparse
+import os
+import subprocess
+import sys
+import shutil
+from typing import List, Sequence, Tuple
+
+
+INSTALL_ROOT_DIRNAME = "install_cache"
+
+
+def _derive_repo_name(repo_ref: str) -> str:
+	repo_ref = repo_ref.rstrip("/")
+	basename = os.path.basename(repo_ref)
+	if basename.endswith(".git"):
+		basename = basename[:-4]
+	return basename or "repo"
+
+
+def _safe_join(base_dir: str, relative_path: str) -> str:
+	normalized = os.path.normpath(relative_path)
+	if normalized.startswith("..") or os.path.isabs(normalized):
+		raise ValueError(f"Unsafe script path '{relative_path}'")
+	return os.path.join(base_dir, normalized)
+
+
+def _git_clone(repo_ref: str, destination: str) -> None:
+	if os.path.isdir(destination):
+		raise FileExistsError(destination)
+
+	os.makedirs(os.path.dirname(destination), exist_ok=True)
+	print(f"Cloning {repo_ref} into {destination}", color="green")
+	try:
+		subprocess.run(
+			["git", "clone", repo_ref, destination],
+			check=True,
+			stdout=subprocess.PIPE,
+			stderr=subprocess.PIPE,
+		)
+	except FileNotFoundError:
+		print("git is not installed or not available in PATH.", color="red", bold=True)
+		sys.exit(1)
+	except subprocess.CalledProcessError as err:
+		print("Failed to clone repository:", color="red", bold=True)
+		if err.stderr:
+			print(err.stderr.decode("utf-8", errors="ignore"), color="red")
+		sys.exit(1)
+
+
+def _git_pull(destination: str) -> None:
+	print(f"Pulling latest changes in {destination}", color="green")
+	try:
+		subprocess.run(
+			["git", "-C", destination, "pull", "--ff-only"],
+			check=True,
+			stdout=subprocess.PIPE,
+			stderr=subprocess.PIPE,
+		)
+	except FileNotFoundError:
+		print("git is not installed or not available in PATH.", color="red", bold=True)
+		sys.exit(1)
+	except subprocess.CalledProcessError as err:
+		print("Failed to update repository:", color="red", bold=True)
+		if err.stderr:
+			print(err.stderr.decode("utf-8", errors="ignore"), color="red")
+		sys.exit(1)
+
+
+def _parse_remote_instructions(instructions_path: str) -> List[Tuple[str, Sequence[str], bool]]:
+	entries: List[Tuple[str, Sequence[str], bool]] = []
+	with open(instructions_path, "r", encoding="utf-8") as file_obj:
+		for raw_line in file_obj:
+			stripped = raw_line.strip()
+			if not stripped or stripped.startswith("#"):
+				continue
+
+			use_source = stripped.startswith("*")
+			if use_source:
+				stripped = stripped[1:].strip()
+
+			if ":" not in stripped:
+				continue
+
+			script_part, commands_part = stripped.split(":", 1)
+			script_name = script_part.strip()
+			commands = [cmd for cmd in commands_part.strip().split() if cmd]
+			if not script_name:
+				continue
+			entries.append((script_name, commands, use_source))
+	return entries
+
+
+def _strip_existing_section(lines: List[str], repo_name: str) -> Tuple[List[str], bool]:
+	stripped_lines: List[str] = []
+	skipping = False
+	removed = False
+	start_marker = f"#{repo_name} start"
+	end_marker = f"#{repo_name} end"
+
+	for line in lines:
+		line_stripped = line.strip()
+		if not skipping and line_stripped == start_marker:
+			skipping = True
+			removed = True
+			continue
+		if skipping and line_stripped == end_marker:
+			skipping = False
+			continue
+		if not skipping:
+			stripped_lines.append(line)
+
+	if skipping:
+		# malformed section without end marker; treat as removed
+		removed = True
+	return stripped_lines, removed
+
+
+def _write_instructions(path: str, lines: List[str]) -> None:
+	if lines and not lines[-1].endswith("\n"):
+		lines[-1] += "\n"
+	with open(path, "w", encoding="utf-8") as file_obj:
+		file_obj.writelines(lines)
+
+
+def _clear_install_dir(base_dir: str) -> None:
+	if not os.path.isdir(base_dir):
+		return
+	for entry in os.listdir(base_dir):
+		full_path = os.path.join(base_dir, entry)
+		if entry == "_repo":
+			continue
+		if os.path.isdir(full_path):
+			shutil.rmtree(full_path)
+		else:
+			os.remove(full_path)
+
+
+def _mirror_repo(
+	repo_name: str,
+	clone_dir: str,
+	mango_dir: str,
+	instructions_path: str,
+) -> None:
+	remote_mango = os.path.join(clone_dir, ".mango")
+	remote_instructions = os.path.join(remote_mango, ".instructions")
+
+	if not os.path.isfile(remote_instructions):
+		print("Remote repository is not a valid mango repo (missing .instructions).", color="red", bold=True)
+		sys.exit(1)
+
+	entries = _parse_remote_instructions(remote_instructions)
+	if not entries:
+		print("Remote repo does not expose any scripts to mirror.", color="yellow")
+		return
+
+	install_dir = os.path.join(mango_dir, INSTALL_ROOT_DIRNAME, repo_name)
+	os.makedirs(install_dir, exist_ok=True)
+	_clear_install_dir(install_dir)
+
+	with open(instructions_path, "r", encoding="utf-8") as file_obj:
+		existing_lines = file_obj.readlines()
+
+	existing_lines, _ = _strip_existing_section(existing_lines, repo_name)
+
+	section_lines: List[str] = [f"#{repo_name} start\n"]
+
+	added_any = False
+	for script_name, commands, use_source in entries:
+		try:
+			remote_script = _safe_join(remote_mango, script_name)
+			prefixed_rel = os.path.normpath(
+				os.path.join(INSTALL_ROOT_DIRNAME, repo_name, "_repo", ".mango", script_name)
+			)
+			local_script = _safe_join(mango_dir, prefixed_rel)
+		except ValueError as exc:
+			print(str(exc), color="yellow")
+			continue
+
+		if not os.path.exists(remote_script) or not os.path.exists(local_script):
+			print(f"Script '{script_name}' not found in remote repo. Skipping.", color="yellow")
+			continue
+
+		added_any = True
+		prefix = "*" if use_source else ""
+		command_segment = " ".join(commands)
+		if command_segment:
+			section_lines.append(f"{prefix}{prefixed_rel}: {command_segment}\n")
+		else:
+			section_lines.append(f"{prefix}{prefixed_rel}:\n")
+
+	section_lines.append(f"#{repo_name} end\n")
+
+	if not added_any:
+		print("No scripts were mirrored due to conflicts or missing files.", color="yellow")
+		_write_instructions(instructions_path, existing_lines)
+		return
+
+	if existing_lines and existing_lines[-1] != "\n":
+		existing_lines.append("\n")
+	updated_lines = existing_lines + section_lines
+	_write_instructions(instructions_path, updated_lines)
+	print(f"Mirrored scripts from '{repo_name}'.", color="green")
+
+
+def _uninstall(repo_name: str, mango_dir: str, instructions_path: str) -> None:
+	install_dir = os.path.join(mango_dir, INSTALL_ROOT_DIRNAME, repo_name)
+
+	with open(instructions_path, "r", encoding="utf-8") as file_obj:
+		lines = file_obj.readlines()
+
+	lines, removed = _strip_existing_section(lines, repo_name)
+	if removed:
+		_write_instructions(instructions_path, lines)
+		print(f"Removed mirrored section for '{repo_name}'.", color="green")
+	else:
+		print(f"No mirrored section found for '{repo_name}'.", color="yellow")
+
+	if os.path.isdir(install_dir):
+		removeFolderRecursively(install_dir)
+		print(f"Deleted local clone at {install_dir}", color="green")
+	else:
+		print(f"No local clone found at {install_dir}", color="yellow")
+
+
+def install() -> None:
+	parser = argparse.ArgumentParser(description="mirror scripts from a remote mango repo")
+	parser.add_argument("repo_path", type=str, help="git repository to install from")
+	parser.add_argument(
+		"--global",
+		action="store_true",
+		dest="install_global",
+		help="install into the home mango repo instead of the closest repo",
+	)
+	parser.add_argument("--update", action="store_true", help="pull latest changes and reapply mirroring")
+	parser.add_argument("--uninstall", action="store_true", help="remove mirrored scripts and delete the clone")
+	args = parser.parse_args()
+
+	if args.update and args.uninstall:
+		print("Please choose either --update or --uninstall, not both.", color="red", bold=True)
+		sys.exit(1)
+
+	if args.install_global:
+		home_mango_dir = os.path.dirname(os.path.abspath(__file__))
+		target_repo = os.path.dirname(home_mango_dir)
+	else:
+		try:
+			target_repo = closestMangoRepo()
+		except FileNotFoundError:
+			print("Could not find a mango repo to install into.", color="red", bold=True)
+			sys.exit(1)
+
+	mango_dir = os.path.join(target_repo, ".mango")
+	instructions_path = os.path.join(mango_dir, ".instructions")
+
+	if not os.path.isdir(mango_dir) or not os.path.isfile(instructions_path):
+		print(f"{target_repo} is not a valid mango repo.", color="red", bold=True)
+		sys.exit(1)
+
+	repo_name = _derive_repo_name(args.repo_path)
+	install_dir = os.path.join(mango_dir, INSTALL_ROOT_DIRNAME, repo_name)
+	clone_dir = os.path.join(install_dir, "_repo")
+
+	if args.uninstall:
+		_uninstall(repo_name, mango_dir, instructions_path)
+		return
+
+	if args.update:
+		if not os.path.isdir(clone_dir):
+			print("Nothing to update; the repository has not been installed yet.", color="red", bold=True)
+			sys.exit(1)
+		_git_pull(clone_dir)
+	else:
+		if os.path.isdir(clone_dir):
+			print("Repository already installed. Use --update or --uninstall.", color="red", bold=True)
+			sys.exit(1)
+		_git_clone(args.repo_path, clone_dir)
+
+	_mirror_repo(repo_name, clone_dir, mango_dir, instructions_path)
+
+
+if __name__ == "__main__":
+	install()
+
+

@@ -34,3 +34,6 @@ Mango comes with a default set of host commands, which you can call using @. The
 
   template       register the current mango repo as a new template for use in the init command
                  - usage: mango @template [template_name]
+
+  install        install a remote mango repo from a git url to a mango repo
+                 - usage: mango @install (repo_path) [--global] [--update]|[--uninstall]

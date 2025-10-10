@@ -178,6 +178,10 @@ By convention, `.on-add` is executed with $1 as the name of the newly added scri
 
 Currently, only the default editor can be configured in `~/.mango/_config.py`. Simply open it up and adjust the string to whatever editor you prefer, so long as it can be launched via the terminal through `<editor_name> [file_path]`.
 
+### Using Remote Repositories
+
+Mango supports installing scripts from remote repositories. This is done using the `@install` command, which allows you to specify a remote repository URL and install its scripts into your local mango repository.
+
 ## Troubleshooting
 
 ### Why isn't PS1 updated when sourcing scripts?
