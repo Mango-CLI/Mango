@@ -1,0 +1,20 @@
+Each .mango folder may contain any number of mango submodules, or submodules for short.
+
+Submodules are mango folders nested in .mango/.submodules/. It is designed so so that:
+1. Submodules are externally maintained, so users are discouraged from modifying them directly.
+2. To facilitate easier version management.
+
+A submodule is a mango folder, containing its own `.instructions` file
+
+To reference commands from a submodule, use the syntax `module-path:command-name`.
+
+For example, you should do:
+- mango module-1:a
+
+In order to reference a command directly from a submodule, use a export directive in the parent module's `.instructions` file.
+
+---
+script-e: e
+module-1/script-a: a            # Exporting a single script requires users to re-bind it
+@export module-1                # This will export all commands from module-1
+---

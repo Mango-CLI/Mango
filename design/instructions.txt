@@ -11,26 +11,29 @@ options:
 
 Mango comes with a default set of host commands, which you can call using @. They include:
 
-  init   create a new mango repo, defaults to in the present working directory, using a template if specified
-         - usage: mango @init [repo_path] (-t, --template [template_name])
-      
-  del    delete the mango repo in a folder, defaulting to the present working directory, if it exists
-         - usage: mango @del [repo_path]
-  
-  list   list all the scripts in a mango repo, defaulting to the present working directory
-         - usage: mango @list [repo_path]
+  init        create a new mango repo, defaults to in the present working directory, using a template if specified
+              - usage: mango @init [repo_path] (-t, --template [template_name])
 
-  add    create a new script in the current mango repo and open it in the default editor
-         - usage: mango @add [script_name] (-b, --bind [command_name ...]) (--noopen)
+  deinit      delete the mango repo in a folder, defaulting to the present working directory, if it exists
+              - usage: mango @del [repo_path]
 
-  rm     remove a script and all bindings from the current mango repo, if it exists
-         - usage: mango @rm [script_name]
+  list        list all the scripts in a mango repo, defaulting to the present working directory
+              - usage: mango @list [repo_path]
 
-  bind   bind a script to one or more commands in the current mango repo
-         - usage: mango @bind [script_name] [command_name ...] (-f, --force)
+  add         create a new script in the current mango repo and open it in the default editor
+              - usage: mango @add [script_name] (-b, --bind [command_name ...]) (--noopen)
 
-  unbind         unbind a script from one or more commands in the current mango repo
-                 - usage: mango @unbind [script_name] [command_name ...]
+  remove      remove a script and all bindings from the current mango repo, if it exists
+              - usage: mango @remove [script_name]
 
-  template       register the current mango repo as a new template for use in the init command
-                 - usage: mango @template [template_name]
+  bind        bind a script to one or more commands in the current mango repo
+              - usage: mango @bind [script_name] [command_name ...] (-f, --force)
+
+  unbind      unbind a script from one or more commands in the current mango repo
+              - usage: mango @unbind [script_name] [command_name ...]
+
+  submodule   operate on submodules in the current mango repo
+              - usage: mango @submodule add [repo_url, repo_path] (rename-to)
+                       mango @submodule update (name)
+                       mango @submodule remove [name]
+                       mango @submodule register [name] (register-id)
