@@ -1,1 +1,0 @@
-default_editor = "vim"

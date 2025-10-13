@@ -1,9 +1,0 @@
-#!/usr/bin/env python3
-
-"""
-"""
-
-from _common import *
-
-import argparse
-import sys, os

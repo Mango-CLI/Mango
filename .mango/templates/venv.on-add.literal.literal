@@ -1,4 +1,0 @@
-#!{venv_full_path}/bin/python3
-
-if __name__ == '__main__':
-    pass
