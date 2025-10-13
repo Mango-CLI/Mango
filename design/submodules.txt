@@ -4,7 +4,7 @@ Submodules are mango folders nested in .mango/.submodules/. It is designed so so
 1. Submodules are externally maintained, so users are discouraged from modifying them directly.
 2. To facilitate easier version management.
 
-A submodule is a mango folder, containing its own `.instructions` file
+A submodule is a mango folder, containing its own `.instructions` file. It must be a git repo for updating and sharing.
 
 To reference commands from a submodule, use the syntax `module-path:command-name`.
 
@@ -18,3 +18,7 @@ script-e: e
 module-1/script-a: a            # Exporting a single script requires users to re-bind it
 @export module-1                # This will export all commands from module-1
 ---
+
+To create your own submodule, use:
+
+- mango init --template submodule
