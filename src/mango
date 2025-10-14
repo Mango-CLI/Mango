@@ -14,34 +14,26 @@ A typical mango repo is formulated as follows:
 """
 
 import argparse
-import os, sys, subprocess
+import os
+import sys
+import subprocess
 
-__version__ = "1.3.2"
+__version__ = "2.0.0-alpha"
 epilog_message = '''\
-If you have installed the full version, your mango should come with a default set of host commands, which you can call using @. They include:
+usage: mango [-h] command ...
 
-  init\t create a new mango repo, defaults to in the present working directory, using a template if specified
-      \t - usage: mango @init (repo_path) (-t, --template [template_name])
+Mango: a simple script manager
 
-  del\t delete the mango repo in a folder, defaulting to the present working directory, if it exists
-     \t - usage: mango @del (repo_path)
+positional arguments:
+  command     The command to run. Host commands start with @
+  args        Arguments to pass to the command
 
-  list\t list all the scripts in the closet mango repo, defaulting to the present working directory
-      \t - usage: mango @list (repo_path)
+options:
+  -h, --help  show this help message and exit
 
-  add\t create a new script in the current mango repo and open it in the default editor; use --noopen to avoid opening
-     \t - usage: mango @add [script_name] (-b, --bind [command_name ...]) (-s, --source) (--noopen)
+Mango comes with a default set of host commands, which you can call using @.
 
-  rm\t remove a script and bindings from the current mango repo. leave -b without further arguments to remove all bindings. add -s to deactivate source mode
-    \t - usage: mango @rm [script_name] (-b, --bind (command_name ...)) (-s, --source)
-
-  bind\t bind a script to one or more commands in the current mango repo
-      \t - usage: mango @bind [script_name] (command_name ...) (-f, --force)
-
-  unbind \t unbind a script from one or more commands in the current mango repo
-         \t - usage: mango @unbind [script_name] (command_name ...)
-
-They can, but are not encouraged to, be overridden by user-defined scripts in a mango repo, or by parent repos.
+Call `mango @help` to invoke the help command for the builtins library. To view help for a specific entry, call `mango @help <command>`.
 '''
 
 def existMangoRepo(scan_path_str: str) -> bool:
@@ -68,53 +60,121 @@ def closestMangoRepo() -> str:
         cur_exec_path_str = os.path.dirname(cur_exec_path_str)
     raise FileNotFoundError("mango repo not found")
 
-def mangoFind(repo_path_str: str, command_name: str) -> tuple[str | None, bool]:
-    """find the script that corresponds to a command in a mango repo
+def splitCommand(command_str: str) -> tuple[str, str]:
+    """splits a command and returns (submodule_path, binding)
+    
+    Format: (sub1:sub2:)binding
     
     Keyword arguments:
-    - repo_path_str -- the string the mango repo
+    - command_str -- the command string to split
+    
+    Return: a tuple corresponding to (submodule_path, binding)
+    """
+    
+    if ':' in command_str:
+        split_command = command_str.split(':')
+        binding = split_command[-1]
+        submodule_path = ':'.join(split_command[:-1])
+        return submodule_path, binding
+    else:
+        return "", command_str
+
+def mapSubmodulePath(submodule_path_str: str) -> str:
+    """maps a submodule path to its real os path, relative to the parent .mango folder
+    
+    Keyword arguments:
+    - submodule_path_str -- the submodule path to map
+    Return: the real os path of the submodule
+    """
+    
+    os_path = "."
+    if submodule_path_str is None or len(submodule_path_str) == 0:
+        return os_path
+    for submodule in submodule_path_str.split(':'):
+        os_path = os.path.join(os_path, ".submodules", submodule)
+    if not os.path.exists(os_path):
+        print(f"Submodule path '{submodule_path_str}' does not exist", file=sys.stderr)
+        raise FileNotFoundError("submodule path does not exist")
+    return os_path
+
+def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
+    """find the script that corresponds to a command in a mango folder
+    
+    Keyword arguments:
+    - mango_path_str -- the path to the .mango folder
     - command_name -- the command typed in by the user
     
     Return: the path to the script if it exists, None if not
     """
     
+    def handleExport(rest: str) -> tuple[str | None, bool]:
+        if not rest:
+            print("Invalid @export command", file=sys.stderr)
+            raise SyntaxError("invalid @export command")
+        submodule_os_path = os.path.join(mango_path_str, mapSubmodulePath(rest))
+        return mangoFind(submodule_os_path, command)
+    
     try:
-        with open(os.path.join(repo_path_str, ".mango", ".instructions"), "r") as instructions_file:
+        submodule_path, binding = splitCommand(command)
+        mapped_mango_path = os.path.join(mango_path_str, mapSubmodulePath(submodule_path))
+        with open(os.path.join(mapped_mango_path, ".instructions"), "r") as instructions_file:
             for line in instructions_file:
                 line = line.strip()
                 # print(line)
                 if (len(line) == 0 or line.startswith("#")):
                     continue
+                if line.startswith('@'):
+                    # derivative command
+                    derivative: str= line.split()[0]
+                    if derivative == "@export":
+                        # syntax: @export SUBMODULE_PATH
+                        rest = line[len(derivative):].strip()
+                        callback = handleExport(rest)
+                        if callback[0] is not None:
+                            return callback
+                        else:
+                            continue
+                    raise SyntaxError("invalid derivative command: " + derivative)
                 use_source = False
                 if line.startswith('*'):
                     use_source = True
                     line = line[1:]
-                script, commands = line.split(":")
-                commands = commands.split()
-                if command_name in commands:
-                    return os.path.join(repo_path_str, ".mango", script), use_source
+                script, bindings = line.split(":")
+                bindings = bindings.split()
+                if binding in bindings:
+                    return os.path.join(mango_path_str, script), use_source
         return None, False
-    except:
-        print("Error occurred when parsing repo: " + repo_path_str, file=sys.stderr)
-        raise SyntaxError("invalid .instructions file")
-        # raise
+    except Exception as e:
+        print("Error occurred when parsing repo: " + mango_path_str, file=sys.stderr)
+        raise SyntaxError("invalid .instructions file") from e
 
-def mangoRecursiveFind(repo_path_str: str, command_name: str) -> str | None:
+def mangoFindFromRepo(repo_path_str: str, command: str) -> tuple[str | None, bool]:
+    """find the script that corresponds to a command in a mango repo
+    
+    Keyword arguments:
+    - repo_path_str -- the string the mango repo
+    - command -- the command typed in by the user
+    
+    Return: the path to the script if it exists, None if not
+    """
+    
+    if not existMangoRepo(repo_path_str):
+        return None, False
+    return mangoFind(os.path.join(repo_path_str, ".mango"), command)
+
+def mangoRecursiveFindFromRepo(repo_path_str: str, command: str) -> tuple[str | None, bool]:
     """find the script that corresponds to a command in a mango repo, recursively, by going up the directory tree
     
     Keyword arguments:
     - repo_path_str -- the string the mango repo
-    - command_name -- the command typed in by the user, with the host flag `@` removed
+    - command -- the command typed in by the user, with the host flag `@` removed
     
     Return: the string of the script if it exists, None if not
     """
     while repo_path_str != "/":
-        if not existMangoRepo(repo_path_str):
-            repo_path_str = os.path.dirname(repo_path_str)
-            continue
-        script, use_source = mangoFind(repo_path_str, command_name)
-        if script is not None:
-            return os.path.join(repo_path_str, ".mango", script), use_source
+        script_path, use_source = mangoFindFromRepo(repo_path_str, command)
+        if script_path is not None:
+            return script_path, use_source
         repo_path_str = os.path.dirname(repo_path_str)
     return None, False
 
@@ -161,13 +221,13 @@ def mango():
         if (args.command.startswith("@")):
             # this is a host command
             command = args.command[1:]
-            script, enforce_source = mangoRecursiveFind(closestMangoRepo(), command)
+            script, enforce_source = mangoRecursiveFindFromRepo(closestMangoRepo(), command)
             if script is None:
                 print(f"Command '{command}' not found in any repo. Should it exist?", file=sys.stderr)
                 return
         else:
             # this is a normal command
-            script, enforce_source = mangoFind(closestMangoRepo(), args.command)
+            script, enforce_source = mangoFindFromRepo(closestMangoRepo(), args.command)
             if script is None:
                 print(f"Command '{args.command}' not found in the current repo. Should it exist?", file=sys.stderr)
                 return

@@ -25,3 +25,15 @@
 ### Added
 
 - Support for versioning in the mango cli.
+
+## [2.0.0-alpha] - 2025-10-14
+
+### Added
+
+- Support for submodules in mango repositories.
+- Support for exporting commands in mango repositories.
+
+### Changed
+
+- Home mango builtins are moved into `builtins` submodule.
+- Development for builtins is migrated to a nwe git repo to facilitate independent versioning and updating.
