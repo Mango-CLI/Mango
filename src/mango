@@ -79,20 +79,22 @@ def splitCommand(command_str: str) -> tuple[str, str]:
     else:
         return "", command_str
 
-def mapSubmodulePath(submodule_path_str: str) -> str:
+def mapSubmodulePath(submodule_path_str: str, base_path: str = ".") -> str:
     """maps a submodule path to its real os path, relative to the parent .mango folder
     
     Keyword arguments:
     - submodule_path_str -- the submodule path to map
-    Return: the real os path of the submodule
+    - base_path -- base directory used to resolve the submodule path
+    Return: the real os path of the submodule, relative to the base path
     """
     
     os_path = "."
-    if submodule_path_str is None or len(submodule_path_str) == 0:
+    if not submodule_path_str:
         return os_path
     for submodule in submodule_path_str.split(':'):
         os_path = os.path.join(os_path, ".submodules", submodule)
-    if not os.path.exists(os_path):
+    candidate_path = os.path.join(base_path, os_path)
+    if not os.path.exists(candidate_path):
         print(f"Submodule path '{submodule_path_str}' does not exist", file=sys.stderr)
         raise FileNotFoundError("submodule path does not exist")
     return os_path
@@ -111,12 +113,12 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
         if not rest:
             print("Invalid @export command", file=sys.stderr)
             raise SyntaxError("invalid @export command")
-        submodule_os_path = os.path.join(mango_path_str, mapSubmodulePath(rest))
+        submodule_os_path = os.path.join(mango_path_str, mapSubmodulePath(rest, base_path=mango_path_str))
         return mangoFind(submodule_os_path, command)
     
     try:
         submodule_path, binding = splitCommand(command)
-        mapped_mango_path = os.path.join(mango_path_str, mapSubmodulePath(submodule_path))
+        mapped_mango_path = os.path.join(mango_path_str, mapSubmodulePath(submodule_path, base_path=mango_path_str))
         with open(os.path.join(mapped_mango_path, ".instructions"), "r") as instructions_file:
             for line in instructions_file:
                 line = line.strip()
