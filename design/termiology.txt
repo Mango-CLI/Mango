@@ -1,0 +1,27 @@
+This file dictates the terminology used throughout mango.
+
+- Mango Utilities
+  - A "mango repository" is a directory containing a .mango folder;
+  - A "mango module" is a folder containing a .instructions file, which can be interpreted by mango;
+    - A "mango entrypoint" is a mango module named ".mango". It makes its parent directory a mango repo;
+    - A "mango submodule" is a mango module under an entrypoint;
+    - A "mango template" is a mango module used to initialize new mango entrypoints;
+  - A "script" is a file managed by mango which can be executed;
+  - A "binding" is a tag attached to a script, used by the user to invoke it;
+  - A "command" is an invocation of a script by its binding;
+    - A "host command" is a command that searches up the filesystem, across multiple mango repos;
+    - A "normal command" is a command that only searches within the active mango repo;
+  - Anything "global" is stored in the home mango, whereas anything "local" is stored in the active mango;
+
+- Paths
+  - A "repo path" is the path to a directory containing a .mango folder;
+  - A "mango path" is the path to a .mango folder;
+  - A script's "virtual path" is defined as either
+    - "path" if the script is in the repo;
+    - "submodule:submodule:...:binding" if the script is in a submodule;
+  - A script's "physical path" is the actual filesystem path to the script;
+    - A script's "relative path" is the path to the script relative to the mango repo root;
+
+- Mango Repositories
+  - The "home mango" is the mango directory in the user's home directory;
+  - The "active mango" is the closest mango directory upstream from the pwd;

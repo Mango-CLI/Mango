@@ -1,4 +1,4 @@
-A template is a mango folder designed to be cloned INTO AS a new mango folder.
+A template is a mango module designed to be cloned INTO AS a new mango module.
 
 The .on-install hook will be called when the template is cloned.
 

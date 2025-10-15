@@ -19,4 +19,4 @@ Default setup of home mango:
 |   └── (user defined submodules)
 └── (user defined mango scripts)
 
-The creation of the home mango is handled by the installation script, where the submodule is cloned into the `.submodules/builtins` folder, and the .on-install script is executed.
+The creation of the home mango is handled by the installation script, where the mango submodule is cloned into the `.submodules/builtins` folder, and the .on-install script is executed.
