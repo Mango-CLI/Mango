@@ -79,7 +79,7 @@ def splitCommand(command_str: str) -> tuple[str, str]:
     else:
         return "", command_str
 
-def mapSubmodulePath(submodule_path_str: str, base_path: str = ".") -> str:
+def mapSubmodulePath(submodule_path_str: str, base_path: str = ".", appendReturn: bool = False) -> str:
     """maps a submodule path to its real os path, relative to the parent .mango folder
     
     Keyword arguments:
@@ -95,9 +95,11 @@ def mapSubmodulePath(submodule_path_str: str, base_path: str = ".") -> str:
         os_path = os.path.join(os_path, ".submodules", submodule)
     candidate_path = os.path.join(base_path, os_path)
     if not os.path.exists(candidate_path):
-        print(f"Submodule path '{submodule_path_str}' does not exist", file=sys.stderr)
         raise FileNotFoundError("submodule path does not exist")
-    return os_path
+    if appendReturn:
+        return candidate_path
+    else:
+        return os_path
 
 def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
     """find the script that corresponds to a command in a mango module
@@ -109,16 +111,32 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
     Return: the path to the script if it exists, None if not
     """
     
-    def handleExport(rest: str) -> tuple[str | None, bool]:
+    print(f"Called: mangoFind({mango_path_str}, {command})", file=sys.stderr)
+    
+    def handleExport(rest: str, cmd: str) -> tuple[str | None, bool]:
         if not rest:
             print("Invalid @export command", file=sys.stderr)
             raise SyntaxError("invalid @export command")
-        submodule_os_path = os.path.join(mango_path_str, mapSubmodulePath(rest, base_path=mango_path_str))
-        return mangoFind(submodule_os_path, command)
+        try:
+            submodule_os_path = os.path.join(mango_path_str, mapSubmodulePath(rest, base_path=mango_path_str))
+        except FileNotFoundError:
+            return None, False
+        # If the command includes a submodule path, we need to handle it differently
+        if ':' in cmd:
+            submodule_path, binding = splitCommand(cmd)
+            # Split the submodule path into parts
+            path_parts = submodule_path.split(':')
+            if path_parts[0] == rest:
+                remaining_path = ':'.join(path_parts[1:])
+                cmd = f"{remaining_path}:{binding}" if remaining_path else binding
+        return mangoFind(submodule_os_path, cmd)
     
     try:
         submodule_path, binding = splitCommand(command)
-        mapped_mango_path = os.path.join(mango_path_str, mapSubmodulePath(submodule_path, base_path=mango_path_str))
+        try:
+            mapped_mango_path = os.path.join(mango_path_str, mapSubmodulePath(submodule_path, base_path=mango_path_str))
+        except FileNotFoundError:
+            return None, False
         with open(os.path.join(mapped_mango_path, ".instructions"), "r") as instructions_file:
             for line in instructions_file:
                 line = line.strip()
@@ -131,7 +149,7 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
                     if derivative == "@export":
                         # syntax: @export SUBMODULE_PATH
                         rest = line[len(derivative):].strip()
-                        callback = handleExport(rest)
+                        callback = handleExport(rest, command)
                         if callback[0] is not None:
                             return callback
                         else:
@@ -141,10 +159,27 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
                 if line.startswith('*'):
                     use_source = True
                     line = line[1:]
-                script, bindings = line.split(":")
-                bindings = bindings.split()
-                if binding in bindings:
-                    return os.path.join(mango_path_str, script), use_source
+                colon_count = line.count(":")
+                if colon_count == 0:
+                    raise SyntaxError("a non-derivative command must have a binding field")
+                elif colon_count == 1:
+                    script, bindings = line.split(":")
+                    bindings = bindings.split()
+                    if binding in bindings:
+                        return os.path.join(mapped_mango_path, script), use_source
+                else:
+                    # This is a rebind command, exporting a binding from a submodule
+                    # syntax: submodule:submodule:binding: new-binding1 new-binding2
+                    parts = line.split(":")
+                    bindings = parts[-1].strip().split()
+                    if binding not in bindings:
+                        continue
+                    # Reconstruct the submodule path and the new command
+                    submodule_path = ':'.join(parts[:-2])
+                    old_binding = parts[-2].strip()
+                    print(f"Rebinding {old_binding} from {submodule_path} to {binding}", file=sys.stderr)
+                    print(f"Base path: {mapped_mango_path}", file=sys.stderr)
+                    return mangoFind(mapSubmodulePath(submodule_path, base_path=mango_path_str, appendReturn=True), old_binding)
         return None, False
     except Exception as e:
         print("Error occurred when parsing repo: " + mango_path_str, file=sys.stderr)

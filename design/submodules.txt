@@ -14,9 +14,10 @@ For example, you should do:
 In order to reference a command directly from a submodule, use a export directive in the parent module's `.instructions` file.
 
 ---
-script-e: e
-module-1/script-a: a            # Exporting a single script requires users to re-bind it
-@export module-1                # This will export all commands from module-1
+script-e: e                     # For root-level scripts
+folder/script-b: b              # And for scripts in folders too
+module-1:binding-a: a           # For scripts in submodules you should re-bind to export
+@export module-1                # This will export all bindings from module-1
 ---
 
 To create your own submodule, use:
