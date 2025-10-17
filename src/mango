@@ -113,23 +113,23 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
     
     print(f"Called: mangoFind({mango_path_str}, {command})", file=sys.stderr)
     
-    def handleExport(rest: str, cmd: str) -> tuple[str | None, bool]:
-        if not rest:
-            print("Invalid @export command", file=sys.stderr)
-            raise SyntaxError("invalid @export command")
+    def handleSubmoduleExport(submodule_name: str, cmd: str) -> tuple[str | None, bool]:
+        """Handle syntax [submodule] * for exporting all bindings"""
         try:
-            submodule_os_path = os.path.join(mango_path_str, mapSubmodulePath(rest, base_path=mango_path_str))
+            submodule_os_path = os.path.join(mango_path_str, mapSubmodulePath(submodule_name, base_path=mango_path_str))
         except FileNotFoundError:
             return None, False
-        # If the command includes a submodule path, we need to handle it differently
-        if ':' in cmd:
-            submodule_path, binding = splitCommand(cmd)
-            # Split the submodule path into parts
-            path_parts = submodule_path.split(':')
-            if path_parts[0] == rest:
-                remaining_path = ':'.join(path_parts[1:])
-                cmd = f"{remaining_path}:{binding}" if remaining_path else binding
         return mangoFind(submodule_os_path, cmd)
+    
+    def handleSubmoduleRebind(submodule_name: str, old_binding: str, new_bindings: list[str], cmd: str) -> tuple[str | None, bool]:
+        """Handle syntax [submodule] old_binding: new_binding1 new_binding2"""
+        if cmd not in new_bindings:
+            return None, False
+        try:
+            submodule_os_path = os.path.join(mango_path_str, mapSubmodulePath(submodule_name, base_path=mango_path_str))
+        except FileNotFoundError:
+            return None, False
+        return mangoFind(submodule_os_path, old_binding)
     
     try:
         submodule_path, binding = splitCommand(command)
@@ -143,18 +143,46 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
                 # print(line)
                 if (len(line) == 0 or line.startswith("#")):
                     continue
-                if line.startswith('@'):
-                    # derivative command
-                    derivative: str= line.split()[0]
-                    if derivative == "@export":
-                        # syntax: @export SUBMODULE_PATH
-                        rest = line[len(derivative):].strip()
-                        callback = handleExport(rest, command)
+                if line.startswith('['):
+                    # New syntax for submodule handling
+                    if ']' not in line:
+                        raise SyntaxError("invalid submodule syntax: missing closing bracket")
+                    
+                    # Extract submodule name and content
+                    content_start = line.find(']') + 1
+                    if content_start >= len(line):
+                        raise SyntaxError("invalid submodule syntax: no content after bracket")
+                    
+                    submodule_name = line[1:line.find(']')].strip()
+                    content = line[content_start:].strip()
+                    
+                    if not content:
+                        raise SyntaxError("invalid submodule syntax: empty content")
+                    
+                    # Handle export all syntax: [submodule] *
+                    if content == '*':
+                        callback = handleSubmoduleExport(submodule_name, command)
                         if callback[0] is not None:
                             return callback
                         else:
                             continue
-                    raise SyntaxError("invalid derivative command: " + derivative)
+                    
+                    # Handle rebind syntax: [submodule] old_binding: new_binding1 new_binding2
+                    if ':' in content:
+                        parts = content.split(':', 1)
+                        if len(parts) != 2:
+                            raise SyntaxError("invalid submodule rebind syntax")
+                        old_binding = parts[0].strip()
+                        new_bindings = parts[1].strip().split()
+                        callback = handleSubmoduleRebind(submodule_name, old_binding, new_bindings, command)
+                        if callback[0] is not None:
+                            return callback
+                        else:
+                            continue
+                    else:
+                        raise SyntaxError("invalid submodule syntax: unexpected content format")
+                
+                # Regular script binding
                 use_source = False
                 if line.startswith('*'):
                     use_source = True
@@ -168,18 +196,7 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
                     if binding in bindings:
                         return os.path.join(mapped_mango_path, script), use_source
                 else:
-                    # This is a rebind command, exporting a binding from a submodule
-                    # syntax: submodule:submodule:binding: new-binding1 new-binding2
-                    parts = line.split(":")
-                    bindings = parts[-1].strip().split()
-                    if binding not in bindings:
-                        continue
-                    # Reconstruct the submodule path and the new command
-                    submodule_path = ':'.join(parts[:-2])
-                    old_binding = parts[-2].strip()
-                    print(f"Rebinding {old_binding} from {submodule_path} to {binding}", file=sys.stderr)
-                    print(f"Base path: {mapped_mango_path}", file=sys.stderr)
-                    return mangoFind(mapSubmodulePath(submodule_path, base_path=mango_path_str, appendReturn=True), old_binding)
+                    raise SyntaxError("invalid syntax: too many colons in line. Use [submodule] old_binding: new_binding1 new_binding2 for rebind syntax")
         return None, False
     except Exception as e:
         print("Error occurred when parsing repo: " + mango_path_str, file=sys.stderr)

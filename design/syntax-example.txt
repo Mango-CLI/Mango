@@ -1,0 +1,9 @@
+# Comments
+
+# [path]: bindings...
+script_path: binding1 binding2 binding3
+path/to/script: binding4
+
+# aliasing for submodules
+@export submodule
+submodule:old_binding new_binding
