@@ -111,8 +111,6 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
     Return: the path to the script if it exists, None if not
     """
     
-    print(f"Called: mangoFind({mango_path_str}, {command})", file=sys.stderr)
-    
     def handleSubmoduleExport(submodule_name: str, cmd: str) -> tuple[str | None, bool]:
         """Handle syntax [submodule] * for exporting all bindings"""
         try:
@@ -278,24 +276,29 @@ def mango():
             script, enforce_source = mangoRecursiveFindFromRepo(closestMangoRepo(), command)
             if script is None:
                 print(f"Command '{command}' not found in any repo. Should it exist?", file=sys.stderr)
-                return
+                raise FileNotFoundError("command not found")
         else:
             # this is a normal command
             script, enforce_source = mangoFindFromRepo(closestMangoRepo(), args.command)
             if script is None:
                 print(f"Command '{args.command}' not found in the current repo. Should it exist?", file=sys.stderr)
-                return
+                raise FileNotFoundError("command not found")
         # execute the script
         # if the source is used, a new bash will be spawned and will take over the current python process
         mangoExecute(script, args.args, use_source=use_source or enforce_source)
     except FileNotFoundError as e:
         if str(e) == "mango repository not found":
             print("No mango repository found in any directory. Where's your home mango I wonder :P", file=sys.stderr)
+            exit(1)
+        elif str(e) == "command not found":
+            # the error message has already been printed, so directly exit
+            exit(1)
         else:
             raise
     except SyntaxError as e:
         if str(e) == "invalid .instructions file":
             print("Invalid .instructions file. Does it exist? Or is there something wrong with it :<", file=sys.stderr)
+            exit(1)
         else:
             raise
     except:

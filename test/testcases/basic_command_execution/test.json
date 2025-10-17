@@ -18,7 +18,7 @@
       "from": "workspace",
       "command": "nonexistent",
       "expected_output": "Command 'nonexistent' not found in the current repo. Should it exist?",
-      "expected_exit_code": 0,
+      "expected_exit_code": 1,
       "check_stderr": true
     }
   ]
