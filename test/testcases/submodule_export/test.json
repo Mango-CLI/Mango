@@ -1,0 +1,24 @@
+{
+  "name": "Submodule Export with New Syntax",
+  "description": "Test new syntax [submodule] * for exporting all bindings",
+  "tests": [
+    {
+      "from": "workspace",
+      "command": "build",
+      "expected_output": "Building project...",
+      "expected_exit_code": 0
+    },
+    {
+      "from": "workspace",
+      "command": "verify",
+      "expected_output": "Running tests...",
+      "expected_exit_code": 0
+    },
+    {
+      "from": "workspace",
+      "command": "greet",
+      "expected_output": "Hello from mango!",
+      "expected_exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Basic Command Execution",
+  "description": "Test basic command execution without submodules",
+  "tests": [
+    {
+      "from": "workspace",
+      "command": "greet",
+      "expected_output": "Hello from mango!",
+      "expected_exit_code": 0
+    },
+    {
+      "from": "workspace",
+      "command": "count one two three",
+      "expected_output": "Counting: one two three",
+      "expected_exit_code": 0
+    },
+    {
+      "from": "workspace",
+      "command": "nonexistent",
+      "expected_output": "Command 'nonexistent' not found in the current repo. Should it exist?",
+      "expected_exit_code": 0,
+      "check_stderr": true
+    }
+  ]
+}

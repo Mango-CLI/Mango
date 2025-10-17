@@ -1,0 +1,3 @@
+hello.sh: greet
+[tools] build: build-project make-build
+test.sh: run-tests

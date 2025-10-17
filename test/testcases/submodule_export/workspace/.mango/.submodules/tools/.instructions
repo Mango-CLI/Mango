@@ -1,0 +1,2 @@
+build.sh: build make compile
+test.sh: test verify check

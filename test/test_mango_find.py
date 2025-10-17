@@ -44,7 +44,8 @@ def test_mango_find_follows_export(monkeypatch, tmp_path, mango_module):
     nested_script = submodule_dir / "nested.sh"
     nested_script.write_text("#!/bin/sh\n")
 
-    (mango_dir / ".instructions").write_text("@export tools\n")
+    # Update to use new syntax
+    (mango_dir / ".instructions").write_text("[tools] *\n")
 
     monkeypatch.chdir(repo)
 

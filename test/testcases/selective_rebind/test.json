@@ -1,0 +1,30 @@
+{
+  "name": "Selective Rebind with New Syntax",
+  "description": "Test new syntax [submodule] old_binding: new_binding1 new_binding2",
+  "tests": [
+    {
+      "from": "workspace",
+      "command": "build-project",
+      "expected_output": "Building project...",
+      "expected_exit_code": 0
+    },
+    {
+      "from": "workspace",
+      "command": "make-build",
+      "expected_output": "Building project...",
+      "expected_exit_code": 0
+    },
+    {
+      "from": "workspace",
+      "command": "run-tests",
+      "expected_output": "Running tests...",
+      "expected_exit_code": 0
+    },
+    {
+      "from": "workspace",
+      "command": "greet",
+      "expected_output": "Hello from mango!",
+      "expected_exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+hello.sh: greet hello hi
+count.sh: count numbers
+*source_me.sh: setup
