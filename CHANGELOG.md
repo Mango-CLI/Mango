@@ -53,3 +53,9 @@ This release is a breaking change, modifying the syntax for exporting submodules
 ### Changed
 
 - Changed alpha-staged-proposed exporting syntax from `@export` to `[submodule] *`, and rebinding script from `submodule:binding: ...` to `[submodule] binding: ...` to facilitate simpler parsing and more consistent syntax.
+
+## [2.0.0-beta.1] - 2025-10-17
+
+### Fixed
+
+- Fixed outdated exporting syntax in the installation script for builtins submodule.
