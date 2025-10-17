@@ -28,12 +28,28 @@
 
 ## [2.0.0-alpha] - 2025-10-14
 
+This release is a breaking change, introducing support for submodules in mango repos. The mango executable is backward-compatible with previous versions, but the structure of the home mango has been altered for better modularity and maintainability.
+
 ### Added
 
 - Support for submodules in mango repositories.
 - Support for exporting commands in mango repositories.
+- More comprehensive design documentation for submodules.
 
 ### Changed
 
 - Home mango builtins are moved into `builtins` submodule.
-- Development for builtins is migrated to a nwe git repo to facilitate independent versioning and updating.
+- Development for builtins is migrated to a new git repo to facilitate independent versioning and updating.
+
+## [2.0.0-beta] - 2025-10-17
+
+This release is a breaking change, modifying the syntax for exporting submodules and bindings in mango repositories compared with the alpha release. It maintains backward compatibility with stable releases prior to 2.0.0-alpha.
+
+### Added
+
+- Introduce `terminology` section in design docs.
+- Pytest-based test suite for mango core.
+
+### Changed
+
+- Changed alpha-staged-proposed exporting syntax from `@export` to `[submodule] *`, and rebinding script from `submodule:binding: ...` to `[submodule] binding: ...` to facilitate simpler parsing and more consistent syntax.

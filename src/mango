@@ -18,7 +18,7 @@ import os
 import sys
 import subprocess
 
-__version__ = "2.0.0-alpha"
+__version__ = "2.0.0-beta"
 epilog_message = '''\
 usage: mango [-h] command ...
 
