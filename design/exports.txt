@@ -1,8 +1,8 @@
 When mango invokes a script, it will set the following environment variables:
 
 - MANGO: set to indicate that the script is being run by mango
-- MANGO_PATH: full path to the mango repository, ending with .mango
+- MANGO_FOLDER_PATH: full path to the mango folder, ending with .mango
 - MANGO_REPO_PATH: path to the directory containing .mango
-- MANGO_SUBMODULE_PATH: full path to the mango submodule containing the script, if applicable
+- MANGO_USER_PATH: path to the user's present working directory when invoking mango
 - MANGO_SCRIPT_PATH: full path to the script being invoked
 - MANGO_SCRIPT_NAME: name of the script being invoked

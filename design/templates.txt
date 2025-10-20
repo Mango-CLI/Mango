@@ -1,8 +1,6 @@
-A template is a mango module designed to be cloned INTO AS a new mango module.
+A template is a mango submodule designed to replace the outer .mango folder with its own .mango folder.
 
 The .on-install hook will be called when the template is cloned.
-
-A template typically removes its .git folder in the .on-install hook, removing all history and links to the original repository. The user would choose whether to initialize a new git repository.
 
 To build a template, source the built-in template template:
 

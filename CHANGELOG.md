@@ -59,3 +59,7 @@ This release is a breaking change, modifying the syntax for exporting submodules
 ### Fixed
 
 - Fixed outdated exporting syntax in the installation script for builtins submodule.
+
+## [2.0.0-beta.2] - 2025-10-18
+
+After public beta problems have been identified in the previous design. This release introduces a breaking change to the submodule design to encode mango scripts in a nested .mango folder, making submodules a repo.

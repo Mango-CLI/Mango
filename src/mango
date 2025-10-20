@@ -18,7 +18,7 @@ import os
 import sys
 import subprocess
 
-__version__ = "2.0.0-beta.1"
+__version__ = "2.0.0-beta.2"
 epilog_message = '''\
 usage: mango [-h] command ...
 
@@ -79,33 +79,33 @@ def splitCommand(command_str: str) -> tuple[str, str]:
     else:
         return "", command_str
 
-def mapSubmodulePath(submodule_path_str: str, base_path: str = ".", appendReturn: bool = False) -> str:
-    """maps a submodule path to its real os path, relative to the parent .mango folder
+def mapSubmodulePath(submodule_virtual_path: str, base_path: str = ".", absolute: bool = False) -> str:
+    """maps a submodule's mango folder path to its real os path
     
     Keyword arguments:
-    - submodule_path_str -- the submodule path to map
+    - submodule_virtual_path -- the submodule path to map
     - base_path -- base directory used to resolve the submodule path
     Return: the real os path of the submodule, relative to the base path
     """
     
-    os_path = "."
-    if not submodule_path_str:
-        return os_path
-    for submodule in submodule_path_str.split(':'):
-        os_path = os.path.join(os_path, ".submodules", submodule)
-    candidate_path = os.path.join(base_path, os_path)
-    if not os.path.exists(candidate_path):
+    relative_path = "."
+    if not submodule_virtual_path:
+        return base_path if absolute else relative_path
+    for submodule in submodule_virtual_path.split(':'):
+        relative_path = os.path.join(relative_path, ".submodules", submodule, ".mango")
+    absolute_os_path = os.path.join(base_path, relative_path)
+    if not os.path.exists(absolute_os_path):
         raise FileNotFoundError("submodule path does not exist")
-    if appendReturn:
-        return candidate_path
+    if absolute:
+        return absolute_os_path
     else:
-        return os_path
+        return relative_path
 
-def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
+def mangoFind(mango_path: str, command: str) -> tuple[str | None, bool]:
     """find the script that corresponds to a command in a mango module
     
     Keyword arguments:
-    - mango_path_str -- the path to the .mango folder
+    - mango_path -- the path to the .mango folder
     - command_name -- the command typed in by the user
     
     Return: the path to the script if it exists, None if not
@@ -114,7 +114,7 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
     def handleSubmoduleExport(submodule_name: str, cmd: str) -> tuple[str | None, bool]:
         """Handle syntax [submodule] * for exporting all bindings"""
         try:
-            submodule_os_path = os.path.join(mango_path_str, mapSubmodulePath(submodule_name, base_path=mango_path_str))
+            submodule_os_path = mapSubmodulePath(submodule_name, base_path=mango_path, absolute=True)
         except FileNotFoundError:
             return None, False
         return mangoFind(submodule_os_path, cmd)
@@ -124,7 +124,7 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
         if cmd not in new_bindings:
             return None, False
         try:
-            submodule_os_path = os.path.join(mango_path_str, mapSubmodulePath(submodule_name, base_path=mango_path_str))
+            submodule_os_path = mapSubmodulePath(submodule_name, base_path=mango_path, absolute=True)
         except FileNotFoundError:
             return None, False
         return mangoFind(submodule_os_path, old_binding)
@@ -132,7 +132,7 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
     try:
         submodule_path, binding = splitCommand(command)
         try:
-            mapped_mango_path = os.path.join(mango_path_str, mapSubmodulePath(submodule_path, base_path=mango_path_str))
+            mapped_mango_path = mapSubmodulePath(submodule_path, base_path=mango_path, absolute=True)
         except FileNotFoundError:
             return None, False
         with open(os.path.join(mapped_mango_path, ".instructions"), "r") as instructions_file:
@@ -197,44 +197,44 @@ def mangoFind(mango_path_str: str, command: str) -> tuple[str | None, bool]:
                     raise SyntaxError("invalid syntax: too many colons in line. Use [submodule] old_binding: new_binding1 new_binding2 for rebind syntax")
         return None, False
     except Exception as e:
-        print("Error occurred when parsing repo: " + mango_path_str, file=sys.stderr)
+        print("Error occurred when parsing repo: " + mango_path, file=sys.stderr)
         raise SyntaxError("invalid .instructions file") from e
 
-def mangoFindFromRepo(repo_path_str: str, command: str) -> tuple[str | None, bool]:
+def mangoFindFromRepo(repo_path: str, command: str) -> tuple[str | None, bool]:
     """find the script that corresponds to a command in a mango repository
     
     Keyword arguments:
-    - repo_path_str -- the string the mango repository
+    - repo_path -- the path to the mango repository
     - command -- the command typed in by the user
     
     Return: the path to the script if it exists, None if not
     """
     
-    if not existMangoRepo(repo_path_str):
+    if not existMangoRepo(repo_path):
         return None, False
-    return mangoFind(os.path.join(repo_path_str, ".mango"), command)
+    return mangoFind(os.path.join(repo_path, ".mango"), command)
 
-def mangoRecursiveFindFromRepo(repo_path_str: str, command: str) -> tuple[str | None, bool]:
+def mangoRecursiveFindFromRepo(repo_path: str, command: str) -> tuple[str | None, bool]:
     """find the script that corresponds to a command in a mango repository, recursively, by going up the directory tree
     
     Keyword arguments:
-    - repo_path_str -- the string the mango repository
+    - repo_path -- the path to the mango repository
     - command -- the command typed in by the user, with the host flag `@` removed
     
     Return: the string of the script if it exists, None if not
     """
-    while repo_path_str != "/":
-        script_path, use_source = mangoFindFromRepo(repo_path_str, command)
+    while repo_path != "/":
+        script_path, use_source = mangoFindFromRepo(repo_path, command)
         if script_path is not None:
             return script_path, use_source
-        repo_path_str = os.path.dirname(repo_path_str)
+        repo_path = os.path.dirname(repo_path)
     return None, False
 
-def mangoExecute(script_path_str: str, args: list[str], use_source: bool) -> None:
+def mangoExecute(script_path: str, args: list[str], use_source: bool) -> None:
     """execute a script with arguments
     
     Keyword arguments:
-    - script_path_str -- the string of the script to execute
+    - script_path -- the path to the script to execute
     - args -- the list of arguments to pass to the script
     - use_source -- whether to source the script instead of executing it in a separate shell
     """
@@ -243,14 +243,14 @@ def mangoExecute(script_path_str: str, args: list[str], use_source: bool) -> Non
         # start a sub-shell with the exact same environment as the current shell
         # join the script and the shell launch with && to prepare the environment
         # this should mimic the effect of sourcing the script
-        pre_command = f"source {script_path_str} {' '.join(args)} && exec $SHELL"
+        pre_command = f"source {script_path} {' '.join(args)} && exec $SHELL"
         pre_env = os.environ.copy()
         pre_env.update({"MANGO_SOURCE": "true"})
         subprocess.run(
             pre_command, shell=True, executable="/bin/bash", env=pre_env, check=True
         )
     else:
-        os.system(f"{script_path_str} " + " ".join(args))
+        os.system(f"{script_path} " + " ".join(args))
 
 def mango():
     """the main function for the mango script
@@ -298,7 +298,7 @@ def mango():
     except SyntaxError as e:
         if str(e) == "invalid .instructions file":
             print("Invalid .instructions file. Does it exist? Or is there something wrong with it :<", file=sys.stderr)
-            exit(1)
+            raise
         else:
             raise
     except:

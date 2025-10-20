@@ -2,13 +2,14 @@ This file dictates the terminology used throughout mango.
 
 - Mango Utilities
   - A "mango repository" is a directory containing a .mango folder;
-  - A "mango module" is a folder containing a .instructions file, which can be interpreted by mango;
-    - A "mango entrypoint" is a mango module named ".mango". It makes its parent directory a mango repo;
-    - A "mango submodule" is a mango module under an entrypoint;
-    - A "mango template" is a mango module used to initialize new mango entrypoints;
-  - A "script" is a file managed by mango which can be executed;
-  - A "binding" is a tag attached to a script, used by the user to invoke it;
-  - A "command" is an invocation of a script by its binding;
+    - A "mango submodule" is a mango repository nested inside another mango repository's .mango/.submodules/ folder;
+    - A "mango template" is a submodule that is designed to be invoked at repository initialization;
+  - A "mango folder" is a folder named ".mango". It contains an .instructions file;
+  - An "item" is a binding or a script;
+    - A "script" is a file managed by mango which can be executed;
+    - A "binding" is a tag attached to a script, used by the user to invoke it;
+    - A "visible item" of a mango repository is any script it contains and any binding defined in its direct submodules;
+  - A "command" is an invocation of an item by its binding;
     - A "host command" is a command that searches up the filesystem, across multiple mango repos;
     - A "normal command" is a command that only searches within the active mango repo;
   - Anything "global" is stored in the home mango, whereas anything "local" is stored in the active mango;
