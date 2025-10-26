@@ -38,7 +38,7 @@ def test_mango_find_follows_export(monkeypatch, tmp_path, mango_module):
     mango_dir = repo / ".mango"
     mango_dir.mkdir(parents=True)
 
-    submodule_dir = mango_dir / ".submodules" / "tools"
+    submodule_dir = mango_dir / ".submodules" / "tools" / ".mango"
     submodule_dir.mkdir(parents=True)
     (submodule_dir / ".instructions").write_text("nested.sh: nested\n")
     nested_script = submodule_dir / "nested.sh"

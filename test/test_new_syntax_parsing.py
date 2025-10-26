@@ -16,7 +16,7 @@ class TestNewSyntaxParsing:
         mango_dir.mkdir(parents=True)
 
         # Create a submodule with instructions
-        submodule_dir = mango_dir / ".submodules" / "tools"
+        submodule_dir = mango_dir / ".submodules" / "tools" / ".mango"
         submodule_dir.mkdir(parents=True)
         (submodule_dir / ".instructions").write_text("tool.sh: tool_run\n")
         (submodule_dir / "tool.sh").write_text("#!/bin/sh\necho 'tool executed'\n")
@@ -36,7 +36,7 @@ class TestNewSyntaxParsing:
         mango_dir.mkdir(parents=True)
 
         # Create a submodule with instructions
-        submodule_dir = mango_dir / ".submodules" / "database"
+        submodule_dir = mango_dir / ".submodules" / "database" / ".mango"
         submodule_dir.mkdir(parents=True)
         (submodule_dir / ".instructions").write_text("db_script.sh: db_connect\n")
         (submodule_dir / "db_script.sh").write_text("#!/bin/sh\necho 'connecting to db'\n")
@@ -61,7 +61,7 @@ class TestNewSyntaxParsing:
         mango_dir.mkdir(parents=True)
 
         # Create a submodule with instructions
-        submodule_dir = mango_dir / ".submodules" / "utils"
+        submodule_dir = mango_dir / ".submodules" / "utils" / ".mango"
         submodule_dir.mkdir(parents=True)
         (submodule_dir / ".instructions").write_text("util.sh: helper\n")
         (submodule_dir / "util.sh").write_text("#!/bin/sh\necho 'helper utility'\n")
@@ -112,14 +112,14 @@ local.sh: local_cmd
         mango_dir.mkdir(parents=True)
 
         # Create nested submodule structure
-        nested_dir = mango_dir / ".submodules" / "level1" / ".submodules" / "level2"
+        level1_dir = mango_dir / ".submodules" / "level1" / ".mango"
+        level1_dir.mkdir(parents=True)
+        (level1_dir / ".instructions").write_text("[level2] *\n")
+        
+        nested_dir = level1_dir / ".submodules" / "level2" / ".mango"
         nested_dir.mkdir(parents=True)
         (nested_dir / ".instructions").write_text("deep.sh: deep_cmd\n")
         (nested_dir / "deep.sh").write_text("#!/bin/sh\necho 'deep command'\n")
-
-        # Create intermediate level with new syntax
-        level1_dir = mango_dir / ".submodules" / "level1"
-        (level1_dir / ".instructions").write_text("[level2] *\n")
 
         # Create main instructions
         (mango_dir / ".instructions").write_text("[level1] *\n")
@@ -149,12 +149,12 @@ local.sh: local_cmd
         mango_dir.mkdir(parents=True)
 
         # Create two submodules
-        tools_dir = mango_dir / ".submodules" / "tools"
+        tools_dir = mango_dir / ".submodules" / "tools" / ".mango"
         tools_dir.mkdir(parents=True)
         (tools_dir / ".instructions").write_text("tool.sh: tool_cmd\n")
         (tools_dir / "tool.sh").write_text("#!/bin/sh\necho 'tool'\n")
 
-        utils_dir = mango_dir / ".submodules" / "utils"
+        utils_dir = mango_dir / ".submodules" / "utils" / ".mango"
         utils_dir.mkdir(parents=True)
         (utils_dir / ".instructions").write_text("util.sh: util_cmd\n")
         (utils_dir / "util.sh").write_text("#!/bin/sh\necho 'utility'\n")

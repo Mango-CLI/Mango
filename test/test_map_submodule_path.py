@@ -4,12 +4,12 @@ import pytest
 
 
 def test_map_submodule_path(monkeypatch, tmp_path, mango_module):
-    nested_dir = tmp_path / ".submodules" / "alpha" / ".submodules" / "beta"
+    nested_dir = tmp_path / ".submodules" / "alpha" / ".mango" / ".submodules" / "beta" / ".mango"
     nested_dir.mkdir(parents=True)
     monkeypatch.chdir(tmp_path)
 
     path = mango_module.mapSubmodulePath("alpha:beta")
-    expected = os.path.join(".", ".submodules", "alpha", ".submodules", "beta")
+    expected = os.path.join(".", ".submodules", "alpha", ".mango", ".submodules", "beta", ".mango")
     assert os.path.normpath(path) == os.path.normpath(expected)
 
 

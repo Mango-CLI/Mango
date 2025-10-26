@@ -86,7 +86,7 @@ class TestEndToEnd:
         # Create many submodules with commands
         instructions_lines = []
         for i in range(10):
-            submodule_dir = mango_dir / ".submodules" / f"module_{i}"
+            submodule_dir = mango_dir / ".submodules" / f"module_{i}" / ".mango"
             submodule_dir.mkdir(parents=True)
             
             # Create scripts in each submodule
