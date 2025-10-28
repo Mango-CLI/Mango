@@ -42,7 +42,23 @@ curl -LsSf https://raw.githubusercontent.com/Mango-CLI/Mango/main/install.sh | b
 
 #### Manual installation
 
-Mango itself is a single Python script in `src/`, so you only need to download it and put it somewhere in your system PATH. It is optional but highly recommended that you put the `builtins.mango` submodule under `~/.mango/.submodules`, renaming it to `builtins`. You can then export the bindings by creating the `.instructions` file under `~/.mango/` with the following content:
+Mango itself is a single Python script in `src/`, so you only need to download it and put it somewhere in your system PATH.
+
+To reconstruct the home mango, you need to manually scaffold the [builtins.mango](https://github.com/Mango-CLI/builtins.mango) submodule.
+
+1. First, create `~/.mango/` if it doesn't exist and then create the `.submodules` folder:
+
+```bash
+mkdir -p ~/.mango/.submodules
+```
+
+2. Clone the builtins submodule into the `.submodules` folder:
+
+```bash
+git clone https://github.com/Mango-CLI/builtins.mango.git ~/.mango/.submodules/builtins
+```
+
+3. Finally, create or edit the `~/.mango/.instructions` file to export the builtins submodule. Type in:
 
 ```text
 # Builtin mango scripts
