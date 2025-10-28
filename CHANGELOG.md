@@ -63,3 +63,22 @@ This release is a breaking change, modifying the syntax for exporting submodules
 ## [2.0.0-beta.2] - 2025-10-18
 
 After public beta problems have been identified in the previous design. This release introduces a breaking change to the submodule design to encode mango scripts in a nested .mango folder, making submodules a repo.
+
+## [2.0.0] - 2025-10-28
+
+This is the first stable release of mango supporting submodules. Major backward compatible improvements have been made to the design and implementation of submodules, making mango more modular and maintainable.
+
+### Added
+
+- Detailed submodule and template design documentation.
+- Support for multiple builtin templates.
+- Scripts to invoke help, which and self commands from the mango builtins.
+- Comprehensive mango export to modify the bash env system.
+
+### Changed
+
+- Removed the experimental `MANGO_SOURCE` flag in favor of a more robust source tracking system.
+
+### Fixed
+
+- Known bugs in builtins implementation regarding script unregistering and binding vacant scripts.

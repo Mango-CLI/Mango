@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-VERSION="2.0.0-beta.2"
+VERSION="2.0.0"
 
 WHITE="\033[1;37m"
 YELLOW="\033[1;33m"
@@ -39,13 +39,34 @@ require_command() {
 }
 
 version_lt() {
-	if [[ "$1" == "$2" ]]; then
-		return 1
+	local v1=$1 v2=$2
+	[[ "$v1" == "$v2" ]] && return 1
+
+	# Extract main and prerelease parts
+	local main1="${v1%%-*}" pre1="${v1#*-}"
+	local main2="${v2%%-*}" pre2="${v2#*-}"
+
+	# Compare main versions
+	if [[ "$main1" != "$main2" ]]; then
+		local smallest
+		smallest=$(printf '%s\n%s\n' "$main1" "$main2" | sort -V | head -n1)
+		[[ "$smallest" == "$v1" ]]
+		return
 	fi
-	local smallest
-	smallest=$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)
-	[[ "$smallest" == "$1" ]]
+
+	# Both main parts are equal; handle prereleases
+	if [[ "$v1" == "$main1" && "$v2" != "$main2" ]]; then
+		return 1  # 1.0.0 > 1.0.0-beta
+	elif [[ "$v1" != "$main1" && "$v2" == "$main2" ]]; then
+		return 0  # 1.0.0-beta < 1.0.0
+	elif [[ "$v1" == "$main1" && "$v2" == "$main2" ]]; then
+		return 1  # identical, so not less than
+	else
+		# Compare prerelease parts lexicographically
+		[[ "$pre1" < "$pre2" ]]
+	fi
 }
+
 
 run_with_spinner() {
 	local message="$1"
@@ -164,7 +185,7 @@ if [[ -d "$MANGO_BUILTINS_DIR" ]]; then
 	rm -rf "$MANGO_BUILTINS_DIR"
 fi
 
-run_with_spinner "Cloning builtins library" git clone --depth 1 --quiet "$MANGO_BUILTINS_REPO" "$MANGO_BUILTINS_DIR"
+run_with_spinner "Cloning builtins library" git clone -c core.autocrlf=false --depth 1 --quiet "$MANGO_BUILTINS_REPO" "$MANGO_BUILTINS_DIR"
 
 printf '[builtins] *\n' >"${MANGO_HOME}/.instructions"
 
