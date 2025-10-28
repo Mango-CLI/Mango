@@ -230,7 +230,7 @@ def mangoRecursiveFindFromRepo(repo_path: str, command: str) -> tuple[str | None
         repo_path = os.path.dirname(repo_path)
     return None, False
 
-def mangoExecute(script_path: str, args: list[str], use_source: bool) -> None:
+def mangoExecute(script_path: str, args: list[str], use_source: bool, env: dict[str, str]) -> None:
     """execute a script with arguments
     
     Keyword arguments:
@@ -238,19 +238,20 @@ def mangoExecute(script_path: str, args: list[str], use_source: bool) -> None:
     - args -- the list of arguments to pass to the script
     - use_source -- whether to source the script instead of executing it in a separate shell
     """
-    
+
     if use_source:
         # start a sub-shell with the exact same environment as the current shell
         # join the script and the shell launch with && to prepare the environment
         # this should mimic the effect of sourcing the script
         pre_command = f"source {script_path} {' '.join(args)} && exec $SHELL"
-        pre_env = os.environ.copy()
-        pre_env.update({"MANGO_SOURCE": "true"})
         subprocess.run(
-            pre_command, shell=True, executable="/bin/bash", env=pre_env, check=True
+            pre_command, shell=True, executable="/bin/bash", env=env, check=True
         )
     else:
-        os.system(f"{script_path} " + " ".join(args))
+        # os.system(f"{script_path} " + " ".join(args))
+        subprocess.run(
+            [script_path] + args, check=True, env=env
+        )
 
 def mango():
     """the main function for the mango script
@@ -285,7 +286,15 @@ def mango():
                 raise FileNotFoundError("command not found")
         # execute the script
         # if the source is used, a new bash will be spawned and will take over the current python process
-        mangoExecute(script, args.args, use_source=use_source or enforce_source)
+        env = os.environ.copy()
+        env.update({
+            "MANGO": "",
+            "MANGO_REPO_PATH": closestMangoRepo(),
+            "MANGO_USER_PATH": os.getcwd(),
+            "MANGO_SCRIPT_PATH": os.path.abspath(script),
+            "MANGO_SCRIPT_NAME": os.path.basename(script)
+        })
+        mangoExecute(script, args.args, use_source=use_source or enforce_source, env=env)
     except FileNotFoundError as e:
         if str(e) == "mango repository not found":
             print("No mango repository found in any directory. Where's your home mango I wonder :P", file=sys.stderr)

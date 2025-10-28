@@ -3,5 +3,6 @@ build
 
 .idea
 .vscode
+.kilocode
 
 __pycache__
