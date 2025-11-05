@@ -6,13 +6,15 @@ Default setup of home mango:
 ├── .instructions
 ├── .submodules
 │   └── builtins
-|       ├── .templates.registry
-|       |   └── (template folders)
-│       ├── .instructions
-│       ├── .on-add
-│       ├── .on-add.literal
-|       ├── .on-install
-│       └── (builtin mango commands)
+|       ├── .mango
+|       |   ├── .templates.registry
+|       |   |   └── (template folders)
+│       |   ├── .instructions
+│       |   ├── .on-add
+│       |   ├── .on-add.literal
+|       |   ├── .on-install
+│       |   └── (builtin mango commands)
+|       └── (license and readme files)
 ├── .templates.registry
 |   └── (user defined template folders)
 ├── .submodules.registry
