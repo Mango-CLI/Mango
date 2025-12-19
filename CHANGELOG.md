@@ -82,3 +82,10 @@ This is the first stable release of mango supporting submodules. Major backward 
 ### Fixed
 
 - Known bugs in builtins implementation regarding script unregistering and binding vacant scripts.
+
+## [2.0.1] - 2025-12-19
+
+### Changed
+
+- Improved debugging messages for mango corrupted instructions file traces.
+- Subprocess error is now handled gracefully without exposing internal traceback.

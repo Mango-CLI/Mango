@@ -18,7 +18,7 @@ import os
 import sys
 import subprocess
 
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 epilog_message = '''\
 usage: mango [-h] command ...
 
@@ -307,9 +307,16 @@ def mango():
     except SyntaxError as e:
         if str(e) == "invalid .instructions file":
             print("Invalid .instructions file. Does it exist? Or is there something wrong with it :<", file=sys.stderr)
-            raise
+            print(">>> Syntax Error:\n", str(e.__cause__), file=sys.stderr)
+            exit(1)
         else:
             raise
+    except subprocess.CalledProcessError as e:
+        print("An error occurred when executing the script :|", file=sys.stderr)
+        # Disabling detailed output
+        # print(">>> Captured stdout:\n", e.stdout, file=sys.stderr)
+        # print(">>> Captured stderr:\n", e.stderr, file=sys.stderr)
+        exit(e.returncode)
     except:
         print("An unknown error occurred. I'm sorry, I'm not sure what happened :(", file=sys.stderr)
         raise
