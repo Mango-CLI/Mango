@@ -95,3 +95,9 @@ This is the first stable release of mango supporting submodules. Major backward 
 ### Changed
 
 - Failing scripts no longer have an appended mango comment.
+
+## [2.0.3] - 2026-03-24
+
+### Changed
+
+- Scripts returning non-zero exit codes no longer have an appended mango comment.

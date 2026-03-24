@@ -18,7 +18,7 @@ import os
 import sys
 import subprocess
 
-__version__ = "2.0.2"
+__version__ = "2.0.3"
 epilog_message = '''\
 usage: mango [-h] command ...
 
@@ -312,8 +312,7 @@ def mango():
         else:
             raise
     except subprocess.CalledProcessError as e:
-        print("An error occurred when executing the script :|", file=sys.stderr)
-        # Disabling detailed output
+        # print("An error occurred when executing the script :|", file=sys.stderr)
         # print(">>> Captured stdout:\n", e.stdout, file=sys.stderr)
         # print(">>> Captured stderr:\n", e.stderr, file=sys.stderr)
         exit(e.returncode)
