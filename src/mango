@@ -18,7 +18,7 @@ import os
 import sys
 import subprocess
 
-__version__ = "2.0.1"
+__version__ = "2.0.2"
 epilog_message = '''\
 usage: mango [-h] command ...
 
@@ -318,7 +318,6 @@ def mango():
         # print(">>> Captured stderr:\n", e.stderr, file=sys.stderr)
         exit(e.returncode)
     except:
-        print("An unknown error occurred. I'm sorry, I'm not sure what happened :(", file=sys.stderr)
         raise
 
 if __name__ == '__main__':
